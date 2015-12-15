@@ -4,13 +4,13 @@ Summary:    User Agent daemon
 Version:    0.11.25
 Release:    0
 Group:      Communications/Connectivity Adaptation
-License:    LGPLv2
-URL:        http://github.com/lpotter/connectionagent
+License:    LGPLv2.1
+URL:        https://git.merproject.org/mer-core/connectionagent
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   connman-qt5-declarative
 Requires:   systemd
 Requires:   systemd-user-session-targets
-Requires: connman >= 1.21
+Requires:   connman >= 1.21
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(connman-qt5)
@@ -20,6 +20,10 @@ BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(qt5-boostable)
 Provides:   connectionagent > 0.10.1
 Obsoletes:   connectionagent <= 0.7.6
+
+# Because of systemctl-user
+Requires(post):   systemd
+Requires(postun): systemd
 
 %description
 Connection Agent provides multi user access to connman's User Agent.
