@@ -1,0 +1,2 @@
+# Tells invoker to run connectionagent as nemo:privileged
+/usr/bin/connectionagent,
