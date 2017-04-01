@@ -1,7 +1,7 @@
 Name:       connectionagent-qt5
 
 Summary:    User Agent daemon
-Version:    0.11.25
+Version:    0.11
 Release:    0
 Group:      Communications/Connectivity Adaptation
 License:    LGPLv2.1
@@ -75,6 +75,9 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}/systemd/user/user-session.target.wants
 ln -s ../connectionagent.service %{buildroot}%{_libdir}/systemd/user/user-session.target.wants/
 
+mkdir -p %{buildroot}%{_datadir}/mapplauncherd/privileges.d
+install -m 644 -p connd/privileges %{buildroot}%{_datadir}/mapplauncherd/privileges.d/connectionagent
+
 %post
 if [ "$1" -ge 1 ]; then
 systemctl-user daemon-reload || :
@@ -91,6 +94,9 @@ fi
 %defattr(-,root,root,-)
 %{_bindir}/connectionagent
 %{_datadir}/dbus-1/services/com.jolla.Connectiond.service
+%dir %{_datadir}/mapplauncherd
+%dir %{_datadir}/mapplauncherd/privileges.d
+%{_datadir}/mapplauncherd/privileges.d/connectionagent
 %{_libdir}/systemd/user/connectionagent.service
 %{_sysconfdir}/dbus-1/session.d/connectionagent.conf
 %{_libdir}/systemd/user/user-session.target.wants/connectionagent.service
