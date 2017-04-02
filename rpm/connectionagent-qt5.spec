@@ -11,6 +11,7 @@ Requires:   connman-qt5-declarative
 Requires:   systemd
 Requires:   systemd-user-session-targets
 Requires:   connman >= 1.21
+Requires:   mapplauncherd >= 4.1.23
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(connman-qt5)
@@ -94,8 +95,6 @@ fi
 %defattr(-,root,root,-)
 %{_bindir}/connectionagent
 %{_datadir}/dbus-1/services/com.jolla.Connectiond.service
-%dir %{_datadir}/mapplauncherd
-%dir %{_datadir}/mapplauncherd/privileges.d
 %{_datadir}/mapplauncherd/privileges.d/connectionagent
 %{_libdir}/systemd/user/connectionagent.service
 %{_sysconfdir}/dbus-1/session.d/connectionagent.conf
