@@ -52,13 +52,13 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     new ConnAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
 
-    if (!dbus.registerService(CONND_SERVICE)) {
-        qDebug() << "XXXXXXXXXXX could not register service XXXXXXXXXXXXXXXXXX";
+    if (!dbus.registerObject(CONND_PATH, this)) {
+        qDebug() << "XXXXXXXXXXX could not register object XXXXXXXXXXXXXXXXXX";
         valid = false;
     }
 
-    if (!dbus.registerObject(CONND_PATH, this)) {
-        qDebug() << "XXXXXXXXXXX could not register object XXXXXXXXXXXXXXXXXX";
+    if (!dbus.registerService(CONND_SERVICE)) {
+        qDebug() << "XXXXXXXXXXX could not register service XXXXXXXXXXXXXXXXXX";
         valid = false;
     }
 
