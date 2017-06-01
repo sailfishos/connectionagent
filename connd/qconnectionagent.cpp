@@ -47,18 +47,16 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     delayedTethering(false),
     valid(true)
 {
-    qDebug() << Q_FUNC_INFO;
-
     new ConnAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
 
-    if (!dbus.registerService(CONND_SERVICE)) {
-        qDebug() << "XXXXXXXXXXX could not register service XXXXXXXXXXXXXXXXXX";
+    if (!dbus.registerObject(CONND_PATH, this)) {
+        qDebug() << "QConnectionAgent: Could not register object to path" << CONND_PATH;
         valid = false;
     }
 
-    if (!dbus.registerObject(CONND_PATH, this)) {
-        qDebug() << "XXXXXXXXXXX could not register object XXXXXXXXXXXXXXXXXX";
+    if (!dbus.registerService(CONND_SERVICE)) {
+        qDebug() << "QConnectionAgent: could not register service" << CONND_SERVICE;
         valid = false;
     }
 
