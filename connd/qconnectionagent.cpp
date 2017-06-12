@@ -15,13 +15,11 @@
 
 #include "qconnectionagent.h"
 #include "connectiond_adaptor.h"
-#include "wakeupwatcher.h"
 
 #include <connman-qt5/useragent.h>
 #include <connman-qt5/networkmanager.h>
 #include <connman-qt5/networktechnology.h>
 #include <connman-qt5/networkservice.h>
-#include <connman-qt5/sessionagent.h>
 
 #include <QtDBus/QDBusConnection>
 
@@ -83,9 +81,6 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     if (techPreferenceList.isEmpty())
         //ethernet,bluetooth,cellular,wifi is default
         techPreferenceList << "bluetooth" << "wifi" << "cellular" << "ethernet";
-
-    mceWatch = new WakeupWatcher(this);
-    connect(mceWatch,SIGNAL(displayStateChanged(QString)),this,SLOT(displayStateChanged(QString)));
 
     connmanAvailable = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
 
@@ -559,16 +554,6 @@ void QConnectionAgent::offlineModeChanged(bool b)
 void QConnectionAgent::flightModeDialogSuppressionTimeout()
 {
     flightModeSuppression = false;
-}
-
-void QConnectionAgent::displayStateChanged(const QString &state)
-{
-    if (state == "on") {
-        NetworkTechnology *wifiTech = netman->getTechnology("wifi");
-        if (wifiTech && wifiTech->powered() && !wifiTech->connected() && !wifiTech->tethering()) {
-            wifiTech->scan();
-        }
-    }
 }
 
 void QConnectionAgent::serviceAutoconnectChanged(bool on)

@@ -11,12 +11,10 @@ DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 SOURCES += tst_connectionagent.cpp \
         ../../../connd/qconnectionagent.cpp \
-        ../../../connd/connectiond_adaptor.cpp \
-        ../../../connd/wakeupwatcher.cpp
+        ../../../connd/connectiond_adaptor.cpp
 HEADERS += \
         ../../../connd/qconnectionagent.h \
-        ../../../connd/connectiond_adaptor.h \
-        ../../../connd/wakeupwatcher.h
+        ../../../connd/connectiond_adaptor.h
 
 INCLUDEPATH += $$OUT_PWD/../../../connd
 
