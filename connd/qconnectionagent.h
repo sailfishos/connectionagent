@@ -1,8 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd
+** Copyright (C) 2014-2017 Jolla Ltd
 ** Contact: lorn.potter@gmail.com
-**
 **
 ** GNU Lesser General Public License Usage
 ** This file may be used under the terms of the GNU Lesser
@@ -141,7 +140,6 @@ private:
 
     QTimer *scanTimer;
     QStringList knownTechnologies;
-    bool tetheringStarted;
     bool delayedTethering;
     bool valid;
 
@@ -163,7 +161,6 @@ private slots:
     void flightModeDialogSuppressionTimeout();
 
     void displayStateChanged(const QString &);
-//    void sleepStateChanged(bool);
 
     void serviceAutoconnectChanged(bool);
     void scanTimeout();
