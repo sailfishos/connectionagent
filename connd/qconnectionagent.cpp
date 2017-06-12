@@ -1,8 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd
+** Copyright (C) 2014-2017 Jolla Ltd
 ** Contact: lorn.potter@gmail.com
-**
 **
 ** GNU Lesser General Public License Usage
 ** This file may be used under the terms of the GNU Lesser
@@ -484,6 +483,7 @@ void QConnectionAgent::techChanged()
         knownTechnologies.clear();
     }
     if (!netman->getTechnology("wifi")) {
+        delayedTethering = false;
         tetheringWifiTech = 0;
         return;
     }
