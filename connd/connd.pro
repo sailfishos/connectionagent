@@ -23,12 +23,10 @@ connadaptor.header_flags = -c ConnAdaptor
 connadaptor.source_flags = -c ConnAdaptor
 
 SOURCES += main.cpp \
-    qconnectionagent.cpp \
-    wakeupwatcher.cpp
+    qconnectionagent.cpp
 
 HEADERS += \
-    qconnectionagent.h \
-    wakeupwatcher.h
+    qconnectionagent.h
 
 target.path = /usr/bin
 INSTALLS += target

@@ -17,23 +17,14 @@
 #define QCONNECTIONAGENT_H
 
 #include <QObject>
-#include <QMap>
 #include <QStringList>
 #include <QVariant>
-#include <QDBusMessage>
-#include <QDBusObjectPath>
-#include <QQueue>
-#include <QPair>
-#include <QElapsedTimer>
 #include <QVector>
 
 class UserAgent;
-class SessionAgent;
-
 class NetworkManager;
 class NetworkService;
 class NetworkTechnology;
-class WakeupWatcher;
 class QTimer;
 
 class QConnectionAgent : public QObject
@@ -120,14 +111,9 @@ private:
     void removeAllTypes(const QString &type);
 
     UserAgent *ua;
-
     NetworkManager *netman;
-    SessionAgent *sessionAgent;
-
     QString currentNetworkState;
-
     ServiceList orderedServicesList;
-
     QStringList techPreferenceList;
     bool isEthernet;
     bool connmanAvailable;
@@ -135,7 +121,6 @@ private:
     NetworkTechnology *tetheringWifiTech;
     bool tetheringEnabled;
     bool flightModeSuppression;
-    WakeupWatcher *mceWatch;
     uint scanTimeoutInterval;
 
     QTimer *scanTimer;
@@ -159,8 +144,6 @@ private slots:
     void servicesListChanged(const QStringList &);
     void offlineModeChanged(bool);
     void flightModeDialogSuppressionTimeout();
-
-    void displayStateChanged(const QString &);
 
     void serviceAutoconnectChanged(bool);
     void scanTimeout();
