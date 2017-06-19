@@ -111,7 +111,6 @@ void QConnectionAgent::onUserInputRequested(const QString &servicePath, const QV
 // from useragent
 void QConnectionAgent::onUserInputCanceled()
 {
-    qDebug() ;
     Q_EMIT userInputCanceled();
 }
 
@@ -305,11 +304,6 @@ void QConnectionAgent::connectToType(const QString &type)
     Q_EMIT configurationNeeded(convType);
 }
 
-void QConnectionAgent::onScanFinished()
-{
-    qDebug() << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
-}
-
 void QConnectionAgent::updateServices()
 {
     qDebug() << Q_FUNC_INFO;
@@ -483,7 +477,6 @@ void QConnectionAgent::techChanged()
             if (technology->type() == "wifi") {
                 tetheringWifiTech = technology;
                 connect(tetheringWifiTech,SIGNAL(poweredChanged(bool)),this,SLOT(technologyPowerChanged(bool)));
-                connect(tetheringWifiTech,SIGNAL(scanFinished()),this,SLOT(onScanFinished()));
                 connect(tetheringWifiTech, SIGNAL(tetheringChanged(bool)),
                                  this,SLOT(techTetheringChanged(bool)), Qt::UniqueConnection);
             }
@@ -560,22 +553,6 @@ void QConnectionAgent::serviceAutoconnectChanged(bool on)
     }
 }
 
-bool QConnectionAgent::isBestService(NetworkService *service)
-{
-
-    qDebug() << Q_FUNC_INFO
-             << service->path()
-             << tetheringEnabled
-             << netman->defaultRoute()->path().contains(service->path())
-             << (netman->defaultRoute()->state() != "online");
-
-    if (tetheringEnabled) return false;
-    if (netman->offlineMode() && service->type() == "cellular") return false;
-    if (netman->defaultRoute()->type() == "wifi" && service->type() == "cellular") return false;
-    if (netman->defaultRoute()->path().contains(service->path())) return false;
-    return true;
-}
-
 void QConnectionAgent::scanTimeout()
 {
     if (!tetheringWifiTech || tetheringWifiTech->tethering())
@@ -596,49 +573,6 @@ void QConnectionAgent::servicesChanged()
     disconnect(netman,SIGNAL(servicesChanged()),this,SLOT(servicesChanged()));
 
     updateServices();
-}
-
-QString QConnectionAgent::findBestConnectableService()
-{
-    for (int i = 0; i < orderedServicesList.count(); i++) {
-
-        QString path = orderedServicesList.at(i).path;
-
-        NetworkService *service = orderedServicesList.at(i).service;
-        if (!service)
-            continue;
-
-        qDebug() << "looking at"
-                 << service->name()
-                 << service->autoConnect();
-
-        bool online = isStateOnline(netman->defaultRoute()->state());
-        qDebug() << "state is"<< online << netman->defaultRoute()->path();
-
-        if (!service->autoConnect()) {
-            continue;
-        }
-
-        qDebug() <<Q_FUNC_INFO<< "continued"
-                << online
-                << (netman->defaultRoute()->path() == service->path())
-                << netman->defaultRoute()->strength()
-                << service->strength();
-
-        if ((netman->defaultRoute()->type() == "wifi" && service->type() == "wifi")
-                &&  netman->defaultRoute()->strength() > service->strength())
-            return QString(); //better quality already connected
-
-        if (netman->defaultRoute()->type() == "wifi" && service->type() != "wifi")
-            return QString(); // prefer connected wifi
-
-        if (isBestService(service)
-                && service->favorite()) {
-            qDebug() << path;
-            return path;
-        }
-    }
-    return QString();
 }
 
 void QConnectionAgent::removeAllTypes(const QString &type)

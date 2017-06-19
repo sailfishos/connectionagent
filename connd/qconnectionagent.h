@@ -106,8 +106,6 @@ private:
     void setup();
     void updateServices();
     bool isStateOnline(const QString &state);
-    bool isBestService(NetworkService *service);
-    QString findBestConnectableService();
     void removeAllTypes(const QString &type);
 
     bool shouldSuppressError(const QString &error, bool cellular) const;
@@ -131,8 +129,6 @@ private:
     bool valid;
 
 private slots:
-    void onScanFinished();
-
     void serviceErrorChanged(const QString &error);
     void serviceStateChanged(const QString &state);
     void networkStateChanged(const QString &state);
