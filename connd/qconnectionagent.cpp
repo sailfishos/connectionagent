@@ -220,8 +220,6 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
         if (delayedTethering && service->type() == "cellular" && tetheringWifiTech->tethering()) {
             Q_EMIT tetheringFinished(false);
         }
-//        serviceInProgress.clear();
-//     //   service->requestDisconnect();
     }
 
     if (delayedTethering && service->type() == "wifi" && state == "association") {
