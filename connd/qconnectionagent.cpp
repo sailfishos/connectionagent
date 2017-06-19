@@ -569,9 +569,6 @@ void QConnectionAgent::scanTimeout()
 
 void QConnectionAgent::servicesChanged()
 {
-    qDebug();
-    disconnect(netman,SIGNAL(servicesChanged()),this,SLOT(servicesChanged()));
-
     updateServices();
 }
 
