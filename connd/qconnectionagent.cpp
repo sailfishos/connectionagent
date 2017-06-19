@@ -118,8 +118,7 @@ void QConnectionAgent::onUserInputCanceled()
 // from useragent
 void QConnectionAgent::onErrorReported(const QString &servicePath, const QString &error)
 {
-    // Suppress errors when switching to offline mode
-    if (error == "connect-failed" && servicePath.contains("cellular") && netman->offlineMode())
+    if (shouldSuppressError(error, servicePath.contains("cellular")))
         return;
 
     if (!tetheringWifiTech) return;
@@ -189,19 +188,11 @@ void QConnectionAgent::servicesListChanged(const QStringList &list)
 
 void QConnectionAgent::serviceErrorChanged(const QString &error)
 {
-    qDebug() << error;
-    if (error == "Operation aborted")
-        return;
     NetworkService *service = static_cast<NetworkService *>(sender());
-
-    if (error == "connect-failed"
-            && (service->type() == "cellular") && netman->offlineMode()) {
-     return;
-    }
-    if (error == "In progress" || error.contains("Method")) // catch dbus errors and discard
+    if (shouldSuppressError(error, service->type() == QLatin1String("cellular")))
         return;
 
-        Q_EMIT errorReported(service->path(),error);
+    Q_EMIT errorReported(service->path(), error);
 }
 
 void QConnectionAgent::serviceStateChanged(const QString &state)
@@ -363,7 +354,7 @@ void QConnectionAgent::servicesError(const QString &errorMessage)
         return;
     NetworkService *serv = static_cast<NetworkService *>(sender());
     qDebug() << serv->name() << errorMessage;
-    Q_EMIT onErrorReported(serv->path(), errorMessage);
+    onErrorReported(serv->path(), errorMessage);
 }
 
 void QConnectionAgent::networkStateChanged(const QString &state)
@@ -656,6 +647,20 @@ void QConnectionAgent::removeAllTypes(const QString &type)
         if (elem.path.contains(type))
             orderedServicesList.remove(elem.path);
     }
+}
+
+bool QConnectionAgent::shouldSuppressError(const QString &error, bool cellular) const
+{
+    if (error.isEmpty())
+        return true;
+    if (error == QLatin1String("Operation aborted"))
+        return true;
+    if (error == QLatin1String("connect-failed") && cellular && netman->offlineMode()) // Suppress errors when switching to offline mode
+        return true;
+    if (error == QLatin1String("In progress") || error.contains(QLatin1String("Method"))) // Catch dbus errors and discard
+        return true;
+
+    return false;
 }
 
 void QConnectionAgent::openConnectionDialog(const QString &type)

@@ -110,6 +110,8 @@ private:
     QString findBestConnectableService();
     void removeAllTypes(const QString &type);
 
+    bool shouldSuppressError(const QString &error, bool cellular) const;
+
     UserAgent *ua;
     NetworkManager *netman;
     QString currentNetworkState;
