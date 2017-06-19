@@ -154,7 +154,6 @@ void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, co
 
 void DeclarativeConnectionAgent::onConnectionRequested()
 {
-    qDebug() << Q_FUNC_INFO;
     Q_EMIT connectionRequest();
 }
 
@@ -168,7 +167,6 @@ void DeclarativeConnectionAgent::connectiondUnregistered(QString)
 
 void DeclarativeConnectionAgent::onConnectionState(const QString &state, const QString &type)
 {
-    qDebug() << Q_FUNC_INFO << state;
     Q_EMIT connectionState(state, type);
 }
 
