@@ -38,7 +38,6 @@ public:
     bool isValid() const;
 
 Q_SIGNALS:
-
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
     void errorReported(const QString &servicePath, const QString &error);
@@ -51,9 +50,6 @@ Q_SIGNALS:
     void tetheringFinished(bool);
 
 public Q_SLOTS:
-
-    void onUserInputRequested(const QString &servicePath, const QVariantMap &fields);
-    void onUserInputCanceled();
     void onErrorReported(const QString &servicePath, const QString &error);
 
     void onConnectionRequest();
@@ -136,7 +132,6 @@ private slots:
     void connmanAvailabilityChanged(bool b);
     void servicesError(const QString &);
     void technologyPowerChanged(bool);
-    void browserRequest(const QString &servicePath, const QString &url);
     void techChanged();
 
     void servicesListChanged(const QStringList &);

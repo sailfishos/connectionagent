@@ -69,7 +69,7 @@ void DeclarativeConnectionAgent::connectToConnectiond(QString)
         qDebug() << Q_FUNC_INFO << "is not valid interface";
     }
     connect(connManagerInterface,SIGNAL(connectionRequest()),
-            this,SLOT(onConnectionRequested()));
+            this, SIGNAL(connectionRequest()));
     connect(connManagerInterface,SIGNAL(configurationNeeded(QString)),
             this,SIGNAL(configurationNeeded(QString)));
 
@@ -77,19 +77,19 @@ void DeclarativeConnectionAgent::connectToConnectiond(QString)
             this,SIGNAL(userInputCanceled()));
 
     connect(connManagerInterface, SIGNAL(errorReported(QString, QString)),
-            this, SLOT(onErrorReported(QString, QString)));
+            this, SIGNAL(errorReported(QString, QString)));
 
     connect(connManagerInterface,SIGNAL(connectionState(QString, QString)),
-                     this,SLOT(onConnectionState(QString, QString)));
+                     this,SIGNAL(connectionState(QString, QString)));
 
-    connect(connManagerInterface,SIGNAL(requestBrowser(QString)),
-                     this,SLOT(onRequestBrowser(QString)));
+    connect(connManagerInterface, SIGNAL(requestBrowser(QString)),
+                     this, SIGNAL(browserRequested(QString)));
 
     connect(connManagerInterface,SIGNAL(userInputRequested(QString,QVariantMap)),
                      this,SLOT(onUserInputRequested(QString,QVariantMap)), Qt::UniqueConnection);
 
     connect(connManagerInterface,SIGNAL(tetheringFinished(bool)),
-            this,SLOT(onTetheringFinished(bool)));
+            this,SLOT(tetheringFinished(bool)));
 }
 
 void DeclarativeConnectionAgent::sendUserReply(const QVariantMap &input)
@@ -125,17 +125,6 @@ void DeclarativeConnectionAgent::connectToType(const QString &type)
     connManagerInterface->connectToType(type);
 }
 
-void DeclarativeConnectionAgent::onErrorReported(const QString &servicePath, const QString &error)
-{
-    Q_EMIT errorReported(servicePath, error);
-}
-
-void DeclarativeConnectionAgent::onRequestBrowser(const QString &url)
-{
-    qDebug() << Q_FUNC_INFO <<url;
-    Q_EMIT browserRequested(url);
-}
-
 void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, const QVariantMap &fields)
 {
     // we do this as qtdbus does not understand QVariantMap very well.
@@ -152,11 +141,6 @@ void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, co
     Q_EMIT userInputRequested(service, map);
 }
 
-void DeclarativeConnectionAgent::onConnectionRequested()
-{
-    Q_EMIT connectionRequest();
-}
-
 void DeclarativeConnectionAgent::connectiondUnregistered(QString)
 {
     if (connManagerInterface) {
@@ -165,19 +149,9 @@ void DeclarativeConnectionAgent::connectiondUnregistered(QString)
     }
 }
 
-void DeclarativeConnectionAgent::onConnectionState(const QString &state, const QString &type)
-{
-    Q_EMIT connectionState(state, type);
-}
-
 void DeclarativeConnectionAgent::startTethering(const QString &type)
 {
     connManagerInterface->startTethering(type);
-}
-
-void DeclarativeConnectionAgent::onTetheringFinished(bool success)
-{
-    Q_EMIT tetheringFinished(success);
 }
 
 void DeclarativeConnectionAgent::stopTethering(bool keepPowered)

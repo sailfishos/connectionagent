@@ -103,20 +103,6 @@ bool QConnectionAgent::isValid() const
 }
 
 // from useragent
-void QConnectionAgent::onUserInputRequested(const QString &servicePath, const QVariantMap &fields)
-{
-    qDebug() << servicePath;
-    // gets called when a connman service gets called to connect and needs more configurations.
-    Q_EMIT userInputRequested(servicePath, fields);
-}
-
-// from useragent
-void QConnectionAgent::onUserInputCanceled()
-{
-    Q_EMIT userInputCanceled();
-}
-
-// from useragent
 void QConnectionAgent::onErrorReported(const QString &servicePath, const QString &error)
 {
     if (shouldSuppressError(error, servicePath.contains("cellular")))
@@ -407,16 +393,15 @@ void QConnectionAgent::setup()
         delete ua;
         ua = new UserAgent(this);
 
-        connect(ua, &UserAgent::userInputRequested,
-                this, &QConnectionAgent::onUserInputRequested);
-
         connect(ua, &UserAgent::connectionRequest, this, &QConnectionAgent::onConnectionRequest);
         connect(ua, &UserAgent::errorReported, this, &QConnectionAgent::onErrorReported);
-        connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::onUserInputCanceled);
-        connect(ua, &UserAgent::userInputRequested,
-                this, &QConnectionAgent::onUserInputRequested, Qt::UniqueConnection);
+        connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::userInputCanceled);
+        connect(ua, &UserAgent::userInputRequested, this, &QConnectionAgent::userInputRequested);
         connect(ua, &UserAgent::browserRequested,
-                this, &QConnectionAgent::browserRequest, Qt::UniqueConnection);
+                this, [=](const QString &servicePath, const QString &url) {
+            Q_UNUSED(servicePath);
+            Q_EMIT requestBrowser(url);
+        });
 
         updateServices();
         offlineModeChanged(netman->offlineMode());
@@ -482,15 +467,6 @@ void QConnectionAgent::techChanged()
             knownTechnologies.removeOne(technology->path());
         }
     }
-}
-
-void QConnectionAgent::browserRequest(const QString &servicePath, const QString &url)
-{
-    Q_UNUSED(servicePath)
-    qDebug() << servicePath;
-    qDebug() << url;
-
-    Q_EMIT requestBrowser(url);
 }
 
 bool QConnectionAgent::isStateOnline(const QString &state)

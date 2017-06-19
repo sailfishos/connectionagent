@@ -34,37 +34,12 @@ class Tst_connectionagent : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void tst_onUserInputRequested();
-    void tst_onUserInputCanceled();
     void tst_onErrorReported();
     void tst_onConnectionRequest();
 
 private:
     QConnectionAgent agent;
 };
-
-void Tst_connectionagent::tst_onUserInputRequested()
-{
-    QSignalSpy spy(&agent, SIGNAL(userInputRequested(QString,QVariantMap)));
-    QVariantMap map;
-    map.insert("test",true);
-
-    agent.onUserInputRequested(QLatin1String("test_path"), map);
-    QCOMPARE(spy.count(),1);
-    QList<QVariant> arguments;
-    arguments = spy.takeFirst();
-    QCOMPARE(arguments.at(0).toString(), QString("test_path"));
-    QVariantMap map2 = arguments.at(1).toMap();
-    QCOMPARE(map2.keys().at(0), QString("test"));
-
-}
-
-void Tst_connectionagent::tst_onUserInputCanceled()
-{
-    QSignalSpy spy(&agent, SIGNAL(userInputCanceled()));
-    agent.onUserInputCanceled();
-    QCOMPARE(spy.count(),1);
-}
 
 void Tst_connectionagent::tst_onErrorReported()
 {
