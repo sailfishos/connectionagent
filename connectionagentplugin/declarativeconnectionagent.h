@@ -89,8 +89,8 @@ private:
 private slots:
     void onUserInputRequested(const QString &service, const QVariantMap &fields);
 
-    void connectToConnectiond(const QString = QString());
-    void connectiondUnregistered(const QString = QString());
+    void connectToConnectiond();
+    void connectiondUnregistered();
 };
 
 #endif
