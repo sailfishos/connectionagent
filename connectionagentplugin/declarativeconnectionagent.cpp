@@ -28,7 +28,7 @@
 
 DeclarativeConnectionAgent::DeclarativeConnectionAgent(QObject *parent):
     QObject(parent),
-    connManagerInterface(0)
+    connManagerInterface(nullptr)
 {
     connectiondWatcher = new QDBusServiceWatcher(CONND_SERVICE,QDBusConnection::sessionBus(),
             QDBusServiceWatcher::WatchForRegistration |
@@ -48,10 +48,8 @@ DeclarativeConnectionAgent::~DeclarativeConnectionAgent()
 
 void DeclarativeConnectionAgent::connectToConnectiond(QString)
 {
-    if (connManagerInterface) {
-        delete connManagerInterface;
-        connManagerInterface = 0;
-    }
+    delete connManagerInterface;
+    connManagerInterface = nullptr;
 
     if (!QDBusConnection::sessionBus().interface()->isServiceRegistered(CONND_SERVICE)) {
         qDebug() << Q_FUNC_INFO << QString("connection service not available").arg(CONND_SERVICE);
@@ -143,10 +141,8 @@ void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, co
 
 void DeclarativeConnectionAgent::connectiondUnregistered(QString)
 {
-    if (connManagerInterface) {
-        delete connManagerInterface;
-        connManagerInterface = 0;
-    }
+    delete connManagerInterface;
+    connManagerInterface = nullptr;
 }
 
 void DeclarativeConnectionAgent::startTethering(const QString &type)
