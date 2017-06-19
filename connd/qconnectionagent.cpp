@@ -57,14 +57,16 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
         valid = false;
     }
 
-    connect(this,SIGNAL(configurationNeeded(QString)),this,SLOT(openConnectionDialog(QString)));
+    connect(this, &QConnectionAgent::configurationNeeded, this, &QConnectionAgent::openConnectionDialog);
 
-    connect(netman,SIGNAL(availabilityChanged(bool)),this,SLOT(connmanAvailabilityChanged(bool)));
-    connect(netman,SIGNAL(servicesListChanged(QStringList)),this,SLOT(servicesListChanged(QStringList)));
-    connect(netman,SIGNAL(stateChanged(QString)),this,SLOT(networkStateChanged(QString)));
-    connect(netman,SIGNAL(offlineModeChanged(bool)),this,SLOT(offlineModeChanged(bool)));
-    connect(netman,SIGNAL(servicesChanged()),this,SLOT(servicesChanged()));
-    connect(netman,SIGNAL(technologiesChanged()),this,SLOT(techChanged()));
+    connect(netman, &NetworkManager::availabilityChanged, this, &QConnectionAgent::connmanAvailabilityChanged);
+    connect(netman, &NetworkManager::servicesListChanged, this, &QConnectionAgent::servicesListChanged);
+    connect(netman, &NetworkManager::stateChanged, this, &QConnectionAgent::networkStateChanged);
+    connect(netman, &NetworkManager::offlineModeChanged, this, &QConnectionAgent::offlineModeChanged);
+    connect(netman, &NetworkManager::servicesChanged, this, [=]() {
+        updateServices();
+    });
+    connect(netman, &NetworkManager::technologiesChanged, this, &QConnectionAgent::techChanged);
 
     QFile connmanConf("/etc/connman/main.conf");
     if (connmanConf.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -85,7 +87,7 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     connmanAvailable = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
 
     scanTimer = new QTimer(this);
-    connect(scanTimer,SIGNAL(timeout()),this,SLOT(scanTimeout()));
+    connect(scanTimer, &QTimer::timeout, this, &QConnectionAgent::scanTimeout);
     scanTimer->setSingleShot(true);
     if (connmanAvailable && valid)
         setup();
@@ -325,16 +327,14 @@ void QConnectionAgent::updateServices()
                 //new!
                 qDebug() <<"new service"<< servicePath;
 
-                QObject::connect(serv, SIGNAL(stateChanged(QString)),
-                                 this,SLOT(serviceStateChanged(QString)), Qt::UniqueConnection);
-                QObject::connect(serv, SIGNAL(connectRequestFailed(QString)),
-                                 this,SLOT(serviceErrorChanged(QString)), Qt::UniqueConnection);
-
-                QObject::connect(serv, SIGNAL(errorChanged(QString)),
-                                 this,SLOT(servicesError(QString)), Qt::UniqueConnection);
-
-                QObject::connect(serv, SIGNAL(autoConnectChanged(bool)),
-                                 this,SLOT(serviceAutoconnectChanged(bool)), Qt::UniqueConnection);
+                QObject::connect(serv, &NetworkService::stateChanged,
+                                 this, &QConnectionAgent::serviceStateChanged, Qt::UniqueConnection);
+                QObject::connect(serv, &NetworkService::connectRequestFailed,
+                                 this, &QConnectionAgent::serviceErrorChanged, Qt::UniqueConnection);
+                QObject::connect(serv, &NetworkService::errorChanged,
+                                 this, &QConnectionAgent::servicesError, Qt::UniqueConnection);
+                QObject::connect(serv, &NetworkService::autoConnectChanged,
+                                 this, &QConnectionAgent::serviceAutoconnectChanged, Qt::UniqueConnection);
             }
         }
     }
@@ -407,16 +407,16 @@ void QConnectionAgent::setup()
         delete ua;
         ua = new UserAgent(this);
 
-        connect(ua,SIGNAL(userInputRequested(QString,QVariantMap)),
-                this,SLOT(onUserInputRequested(QString,QVariantMap)));
+        connect(ua, &UserAgent::userInputRequested,
+                this, &QConnectionAgent::onUserInputRequested);
 
-        connect(ua,SIGNAL(connectionRequest()),this,SLOT(onConnectionRequest()));
-        connect(ua,SIGNAL(errorReported(QString, QString)),this,SLOT(onErrorReported(QString, QString)));
-        connect(ua,SIGNAL(userInputCanceled()),this,SLOT(onUserInputCanceled()));
-        connect(ua,SIGNAL(userInputRequested(QString,QVariantMap)),
-                this,SLOT(onUserInputRequested(QString,QVariantMap)), Qt::UniqueConnection);
-        connect(ua,SIGNAL(browserRequested(QString,QString)),
-                this,SLOT(browserRequest(QString,QString)), Qt::UniqueConnection);
+        connect(ua, &UserAgent::connectionRequest, this, &QConnectionAgent::onConnectionRequest);
+        connect(ua, &UserAgent::errorReported, this, &QConnectionAgent::onErrorReported);
+        connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::onUserInputCanceled);
+        connect(ua, &UserAgent::userInputRequested,
+                this, &QConnectionAgent::onUserInputRequested, Qt::UniqueConnection);
+        connect(ua, &UserAgent::browserRequested,
+                this, &QConnectionAgent::browserRequest, Qt::UniqueConnection);
 
         updateServices();
         offlineModeChanged(netman->offlineMode());
@@ -449,7 +449,7 @@ void QConnectionAgent::technologyPowerChanged(bool powered)
 
     if (netman && powered && delayedTethering) {
         // wifi tech might not be ready, so delay this
-        QTimer::singleShot(1000,this,SLOT(setWifiTetheringEnabled()));
+        QTimer::singleShot(1000, this, &QConnectionAgent::setWifiTetheringEnabled);
     }
 }
 
@@ -474,9 +474,9 @@ void QConnectionAgent::techChanged()
             knownTechnologies << technology->path();
             if (technology->type() == "wifi") {
                 tetheringWifiTech = technology;
-                connect(tetheringWifiTech,SIGNAL(poweredChanged(bool)),this,SLOT(technologyPowerChanged(bool)));
-                connect(tetheringWifiTech, SIGNAL(tetheringChanged(bool)),
-                                 this,SLOT(techTetheringChanged(bool)), Qt::UniqueConnection);
+                connect(tetheringWifiTech, &NetworkTechnology::poweredChanged, this, &QConnectionAgent::technologyPowerChanged);
+                connect(tetheringWifiTech, &NetworkTechnology::tetheringChanged,
+                        this, &QConnectionAgent::techTetheringChanged, Qt::UniqueConnection);
             }
         } else {
             knownTechnologies.removeOne(technology->path());
@@ -529,7 +529,7 @@ void QConnectionAgent::offlineModeChanged(bool b)
 {
     flightModeSuppression = b;
     if (b) {
-        QTimer::singleShot(5 * 1000 * 60,this,SLOT(flightModeDialogSuppressionTimeout())); //5 minutes
+        QTimer::singleShot(5 * 1000 * 60, this, &QConnectionAgent::flightModeDialogSuppressionTimeout); //5 minutes
     }
 }
 
@@ -563,11 +563,6 @@ void QConnectionAgent::scanTimeout()
             scanTimer->start(scanTimeoutInterval * 60 * 1000);
         }
     }
-}
-
-void QConnectionAgent::servicesChanged()
-{
-    updateServices();
 }
 
 void QConnectionAgent::removeAllTypes(const QString &type)
