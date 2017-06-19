@@ -589,6 +589,8 @@ bool QConnectionAgent::shouldSuppressError(const QString &error, bool cellular) 
         return true;
     if (error == QLatin1String("Operation aborted"))
         return true;
+    if (error == QLatin1String("No carrier") && cellular) // Don't report cellular carrier lost.
+        return true;
     if (error == QLatin1String("connect-failed") && cellular && netman->offlineMode()) // Suppress errors when switching to offline mode
         return true;
     if (error == QLatin1String("In progress") || error.contains(QLatin1String("Method"))) // Catch dbus errors and discard
