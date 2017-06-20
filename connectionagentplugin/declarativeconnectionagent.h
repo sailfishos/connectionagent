@@ -87,15 +87,10 @@ private:
     QDBusServiceWatcher *connectiondWatcher;
 
 private slots:
-    void onErrorReported(const QString &servicePath, const QString &error);
-    void onRequestBrowser(const QString &url);
     void onUserInputRequested(const QString &service, const QVariantMap &fields);
-    void onConnectionRequested();
-    void onConnectionState(const QString &state, const QString &type);
-    void onTetheringFinished(bool);
 
-    void connectToConnectiond(const QString = QString());
-    void connectiondUnregistered(const QString = QString());
+    void connectToConnectiond();
+    void connectiondUnregistered();
 };
 
 #endif

@@ -38,7 +38,6 @@ public:
     bool isValid() const;
 
 Q_SIGNALS:
-
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
     void userInputCanceled();
     void errorReported(const QString &servicePath, const QString &error);
@@ -51,9 +50,6 @@ Q_SIGNALS:
     void tetheringFinished(bool);
 
 public Q_SLOTS:
-
-    void onUserInputRequested(const QString &servicePath, const QVariantMap &fields);
-    void onUserInputCanceled();
     void onErrorReported(const QString &servicePath, const QString &error);
 
     void onConnectionRequest();
@@ -106,9 +102,9 @@ private:
     void setup();
     void updateServices();
     bool isStateOnline(const QString &state);
-    bool isBestService(NetworkService *service);
-    QString findBestConnectableService();
     void removeAllTypes(const QString &type);
+
+    bool shouldSuppressError(const QString &error, bool cellular) const;
 
     UserAgent *ua;
     NetworkManager *netman;
@@ -129,8 +125,6 @@ private:
     bool valid;
 
 private slots:
-    void onScanFinished();
-
     void serviceErrorChanged(const QString &error);
     void serviceStateChanged(const QString &state);
     void networkStateChanged(const QString &state);
@@ -138,7 +132,6 @@ private slots:
     void connmanAvailabilityChanged(bool b);
     void servicesError(const QString &);
     void technologyPowerChanged(bool);
-    void browserRequest(const QString &servicePath, const QString &url);
     void techChanged();
 
     void servicesListChanged(const QStringList &);
@@ -148,7 +141,6 @@ private slots:
     void serviceAutoconnectChanged(bool);
     void scanTimeout();
     void techTetheringChanged(bool b);
-    void servicesChanged();
 
     void openConnectionDialog(const QString &type);
     void setWifiTetheringEnabled();

@@ -28,16 +28,16 @@
 
 DeclarativeConnectionAgent::DeclarativeConnectionAgent(QObject *parent):
     QObject(parent),
-    connManagerInterface(0)
+    connManagerInterface(nullptr)
 {
     connectiondWatcher = new QDBusServiceWatcher(CONND_SERVICE,QDBusConnection::sessionBus(),
             QDBusServiceWatcher::WatchForRegistration |
             QDBusServiceWatcher::WatchForUnregistration, this);
 
-    connect(connectiondWatcher, SIGNAL(serviceRegistered(QString)),
-            this, SLOT(connectToConnectiond(QString)));
-    connect(connectiondWatcher, SIGNAL(serviceUnregistered(QString)),
-            this, SLOT(connectiondUnregistered(QString)));
+    connect(connectiondWatcher, &QDBusServiceWatcher::serviceRegistered,
+            this, &DeclarativeConnectionAgent::connectToConnectiond);
+    connect(connectiondWatcher, &QDBusServiceWatcher::serviceUnregistered,
+            this, &DeclarativeConnectionAgent::connectiondUnregistered);
 
     connectToConnectiond();
 }
@@ -46,12 +46,10 @@ DeclarativeConnectionAgent::~DeclarativeConnectionAgent()
 {
 }
 
-void DeclarativeConnectionAgent::connectToConnectiond(QString)
+void DeclarativeConnectionAgent::connectToConnectiond()
 {
-    if (connManagerInterface) {
-        delete connManagerInterface;
-        connManagerInterface = 0;
-    }
+    delete connManagerInterface;
+    connManagerInterface = nullptr;
 
     if (!QDBusConnection::sessionBus().interface()->isServiceRegistered(CONND_SERVICE)) {
         qDebug() << Q_FUNC_INFO << QString("connection service not available").arg(CONND_SERVICE);
@@ -68,28 +66,22 @@ void DeclarativeConnectionAgent::connectToConnectiond(QString)
     if (!connManagerInterface->isValid()) {
         qDebug() << Q_FUNC_INFO << "is not valid interface";
     }
-    connect(connManagerInterface,SIGNAL(connectionRequest()),
-            this,SLOT(onConnectionRequested()));
-    connect(connManagerInterface,SIGNAL(configurationNeeded(QString)),
-            this,SIGNAL(configurationNeeded(QString)));
-
-    connect(connManagerInterface,SIGNAL(userInputCanceled()),
-            this,SIGNAL(userInputCanceled()));
-
-    connect(connManagerInterface, SIGNAL(errorReported(QString, QString)),
-            this, SLOT(onErrorReported(QString, QString)));
-
-    connect(connManagerInterface,SIGNAL(connectionState(QString, QString)),
-                     this,SLOT(onConnectionState(QString, QString)));
-
-    connect(connManagerInterface,SIGNAL(requestBrowser(QString)),
-                     this,SLOT(onRequestBrowser(QString)));
-
-    connect(connManagerInterface,SIGNAL(userInputRequested(QString,QVariantMap)),
-                     this,SLOT(onUserInputRequested(QString,QVariantMap)), Qt::UniqueConnection);
-
-    connect(connManagerInterface,SIGNAL(tetheringFinished(bool)),
-            this,SLOT(onTetheringFinished(bool)));
+    connect(connManagerInterface, &com::jolla::Connectiond::connectionRequest,
+            this, &DeclarativeConnectionAgent::connectionRequest);
+    connect(connManagerInterface, &com::jolla::Connectiond::configurationNeeded,
+            this, &DeclarativeConnectionAgent::configurationNeeded);
+    connect(connManagerInterface, &com::jolla::Connectiond::userInputCanceled,
+            this, &DeclarativeConnectionAgent::userInputCanceled);
+    connect(connManagerInterface, &com::jolla::Connectiond::errorReported,
+            this, &DeclarativeConnectionAgent::errorReported);
+    connect(connManagerInterface, &com::jolla::Connectiond::connectionState,
+            this, &DeclarativeConnectionAgent::connectionState);
+    connect(connManagerInterface, &com::jolla::Connectiond::requestBrowser,
+            this, &DeclarativeConnectionAgent::browserRequested);
+    connect(connManagerInterface, &com::jolla::Connectiond::userInputRequested,
+            this, &DeclarativeConnectionAgent::onUserInputRequested, Qt::UniqueConnection);
+    connect(connManagerInterface, &com::jolla::Connectiond::tetheringFinished,
+            this, &DeclarativeConnectionAgent::tetheringFinished);
 }
 
 void DeclarativeConnectionAgent::sendUserReply(const QVariantMap &input)
@@ -125,17 +117,6 @@ void DeclarativeConnectionAgent::connectToType(const QString &type)
     connManagerInterface->connectToType(type);
 }
 
-void DeclarativeConnectionAgent::onErrorReported(const QString &servicePath, const QString &error)
-{
-    Q_EMIT errorReported(servicePath, error);
-}
-
-void DeclarativeConnectionAgent::onRequestBrowser(const QString &url)
-{
-    qDebug() << Q_FUNC_INFO <<url;
-    Q_EMIT browserRequested(url);
-}
-
 void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, const QVariantMap &fields)
 {
     // we do this as qtdbus does not understand QVariantMap very well.
@@ -152,34 +133,15 @@ void DeclarativeConnectionAgent::onUserInputRequested(const QString &service, co
     Q_EMIT userInputRequested(service, map);
 }
 
-void DeclarativeConnectionAgent::onConnectionRequested()
+void DeclarativeConnectionAgent::connectiondUnregistered()
 {
-    qDebug() << Q_FUNC_INFO;
-    Q_EMIT connectionRequest();
-}
-
-void DeclarativeConnectionAgent::connectiondUnregistered(QString)
-{
-    if (connManagerInterface) {
-        delete connManagerInterface;
-        connManagerInterface = 0;
-    }
-}
-
-void DeclarativeConnectionAgent::onConnectionState(const QString &state, const QString &type)
-{
-    qDebug() << Q_FUNC_INFO << state;
-    Q_EMIT connectionState(state, type);
+    delete connManagerInterface;
+    connManagerInterface = nullptr;
 }
 
 void DeclarativeConnectionAgent::startTethering(const QString &type)
 {
     connManagerInterface->startTethering(type);
-}
-
-void DeclarativeConnectionAgent::onTetheringFinished(bool success)
-{
-    Q_EMIT tetheringFinished(success);
 }
 
 void DeclarativeConnectionAgent::stopTethering(bool keepPowered)
