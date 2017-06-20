@@ -1,7 +1,7 @@
 Name:       connectionagent-qt5
 
 Summary:    User Agent daemon
-Version:    0.11
+Version:    0.11.33
 Release:    0
 Group:      Communications/Connectivity Adaptation
 License:    LGPLv2.1
