@@ -83,6 +83,7 @@ signals:
     void tetheringFinished(bool);
 
 private:
+    bool checkValidness();
     com::jolla::Connectiond *connManagerInterface;
     QDBusServiceWatcher *connectiondWatcher;
 
