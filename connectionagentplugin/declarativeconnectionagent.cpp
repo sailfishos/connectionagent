@@ -26,9 +26,9 @@
 #define CONND_SERVICE "com.jolla.Connectiond"
 #define CONND_PATH "/Connectiond"
 
-DeclarativeConnectionAgent::DeclarativeConnectionAgent(QObject *parent):
-    QObject(parent),
-    connManagerInterface(nullptr)
+DeclarativeConnectionAgent::DeclarativeConnectionAgent(QObject *parent)
+    : QObject(parent),
+      connManagerInterface(nullptr)
 {
     connectiondWatcher = new QDBusServiceWatcher(CONND_SERVICE,QDBusConnection::sessionBus(),
             QDBusServiceWatcher::WatchForRegistration |
@@ -86,31 +86,30 @@ void DeclarativeConnectionAgent::connectToConnectiond()
 
 void DeclarativeConnectionAgent::sendUserReply(const QVariantMap &input)
 {
-    if (!connManagerInterface || !connManagerInterface->isValid()) {
-        Q_EMIT errorReported("","ConnectionAgent not available");
+    if (!checkValidness()) {
         return;
     }
+
     QDBusPendingReply<> reply = connManagerInterface->sendUserReply(input);
     reply.waitForFinished();
     if (reply.isError()) {
         qDebug() << Q_FUNC_INFO << reply.error().message();
-        Q_EMIT errorReported("",reply.error().message());
+        Q_EMIT errorReported("", reply.error().message());
     }
 }
 
 void DeclarativeConnectionAgent::sendConnectReply(const QString &replyMessage, int timeout)
 {
-    if (!connManagerInterface || !connManagerInterface->isValid()) {
-        Q_EMIT errorReported("","ConnectionAgent not available");
+    if (!checkValidness()) {
         return;
     }
+
     connManagerInterface->sendConnectReply(replyMessage,timeout);
 }
 
 void DeclarativeConnectionAgent::connectToType(const QString &type)
 {
-    if (!connManagerInterface || !connManagerInterface->isValid()) {
-        Q_EMIT errorReported("","ConnectionAgent not available");
+    if (!checkValidness()) {
         return;
     }
 
@@ -141,10 +140,28 @@ void DeclarativeConnectionAgent::connectiondUnregistered()
 
 void DeclarativeConnectionAgent::startTethering(const QString &type)
 {
+    if (!checkValidness()) {
+        return;
+    }
+
     connManagerInterface->startTethering(type);
 }
 
 void DeclarativeConnectionAgent::stopTethering(bool keepPowered)
 {
+    if (!checkValidness()) {
+        return;
+    }
+
     connManagerInterface->stopTethering(keepPowered);
+}
+
+bool DeclarativeConnectionAgent::checkValidness()
+{
+    if (!connManagerInterface || !connManagerInterface->isValid()) {
+        Q_EMIT errorReported("", "ConnectionAgent not available");
+        return false;
+    }
+
+    return true;
 }
