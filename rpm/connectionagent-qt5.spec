@@ -4,8 +4,8 @@ Summary:    User Agent daemon
 Version:    0.11.33
 Release:    0
 Group:      Communications/Connectivity Adaptation
-License:    LGPLv2.1
-URL:        https://git.merproject.org/mer-core/connectionagent
+License:    LGPLv2
+URL:        https://git.sailfishos.org/mer-core/connectionagent
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   connman-qt5-declarative
 Requires:   systemd
@@ -99,6 +99,7 @@ fi
 %{_libdir}/systemd/user/connectionagent.service
 %{_sysconfdir}/dbus-1/session.d/connectionagent.conf
 %{_libdir}/systemd/user/user-session.target.wants/connectionagent.service
+%license COPYING
 
 %files declarative
 %defattr(-,root,root,-)
