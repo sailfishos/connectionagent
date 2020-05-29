@@ -3,7 +3,6 @@ Name:       connectionagent-qt5
 Summary:    User Agent daemon
 Version:    0.11.33
 Release:    0
-Group:      Communications/Connectivity Adaptation
 License:    LGPLv2
 URL:        https://git.sailfishos.org/mer-core/connectionagent
 Source0:    %{name}-%{version}.tar.bz2
@@ -19,6 +18,7 @@ BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Test)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(qt5-boostable)
+BuildRequires:  systemd
 Provides:   connectionagent > 0.10.1
 Obsoletes:   connectionagent <= 0.7.6
 
@@ -32,7 +32,6 @@ It also provides autoconnecting features.
 
 %package declarative
 Summary:    Declarative plugin for connection agent.
-Group:      Development/Tools
 Requires:   %{name} = %{version}-%{release}
 Requires:   %{name} = %{version}
 
@@ -41,7 +40,6 @@ This package contains the declarative plugin for connection agent.
 
 %package test
 Summary:    auto test for connection agent.
-Group:      Development/Tools
 Requires:   %{name} = %{version}-%{release}
 Requires:   %{name} = %{version}
 
@@ -50,7 +48,6 @@ This package contains the auto tests for connection agent.
 
 %package tracing
 Summary:    Configuration for Connectionagent to enable tracing
-Group:      Development/Tools
 Requires:   %{name} = %{version}-%{release}
 
 %description tracing
@@ -60,11 +57,8 @@ Will enable tracing for Connectionagent
 %setup -q -n %{name}-%{version}
 
 %build
-%{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
-%{!?qtc_make:%define qtc_make make}
-
-%qtc_qmake5
-%qtc_make %{?_smp_mflags}
+%qmake5
+make %{?_smp_mflags}
 
 
 %install
@@ -73,8 +67,8 @@ rm -rf %{buildroot}
 
 %make_install
 
-mkdir -p %{buildroot}%{_libdir}/systemd/user/user-session.target.wants
-ln -s ../connectionagent.service %{buildroot}%{_libdir}/systemd/user/user-session.target.wants/
+mkdir -p %{buildroot}%{_userunitdir}/user-session.target.wants
+ln -s ../connectionagent.service %{buildroot}%{_userunitdir}/user-session.target.wants/
 
 mkdir -p %{buildroot}%{_datadir}/mapplauncherd/privileges.d
 install -m 644 -p connd/privileges %{buildroot}%{_datadir}/mapplauncherd/privileges.d/connectionagent
@@ -96,9 +90,9 @@ fi
 %{_bindir}/connectionagent
 %{_datadir}/dbus-1/services/com.jolla.Connectiond.service
 %{_datadir}/mapplauncherd/privileges.d/connectionagent
-%{_libdir}/systemd/user/connectionagent.service
 %{_sysconfdir}/dbus-1/session.d/connectionagent.conf
-%{_libdir}/systemd/user/user-session.target.wants/connectionagent.service
+%{_userunitdir}/connectionagent.service
+%{_userunitdir}/user-session.target.wants/connectionagent.service
 %license COPYING
 
 %files declarative
