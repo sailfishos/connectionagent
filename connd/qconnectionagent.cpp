@@ -135,6 +135,18 @@ void QConnectionAgent::onConnectionRequest()
     }
 }
 
+void QConnectionAgent::onBrowserRequested(const QString &servicePath, const QString &url)
+{
+    QString serviceName;
+    for (const Service &elem : orderedServicesList) {
+        if (elem.service->path() == servicePath) {
+            serviceName = elem.service->name();
+            break;
+        }
+    }
+    Q_EMIT requestBrowser(url, serviceName);
+}
+
 void QConnectionAgent::sendConnectReply(const QString &in0, int in1)
 {
     ua->sendConnectReply(in0, in1);
@@ -401,11 +413,7 @@ void QConnectionAgent::setup()
         connect(ua, &UserAgent::errorReported, this, &QConnectionAgent::onErrorReported);
         connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::userInputCanceled);
         connect(ua, &UserAgent::userInputRequested, this, &QConnectionAgent::userInputRequested);
-        connect(ua, &UserAgent::browserRequested,
-                this, [=](const QString &servicePath, const QString &url) {
-            Q_UNUSED(servicePath);
-            Q_EMIT requestBrowser(url);
-        });
+        connect(ua, &UserAgent::browserRequested, this, &QConnectionAgent::onBrowserRequested);
 
         updateServices();
         offlineModeChanged(netman->offlineMode());

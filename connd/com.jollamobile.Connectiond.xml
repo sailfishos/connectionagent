@@ -14,6 +14,7 @@
     </signal>
     <signal name="requestBrowser">
       <arg name="url" type="s" direction="out"/>
+      <arg name="serviceName" type="s" direction="out"/>
     </signal>
     <signal name="userInputCanceled">
     </signal>
