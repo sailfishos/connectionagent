@@ -196,6 +196,10 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
         netman->defaultRoute()->requestDisconnect();
     }
 
+    if (state == "disconnect") {
+        Q_EMIT connectionState(state, service->type());
+    }
+
     if (!service->favorite() || !netman->getTechnology(service->type())
             || !netman->getTechnology(service->type())->powered()) {
         qDebug() << "not fav or not powered";
