@@ -46,13 +46,14 @@ Q_SIGNALS:
     void connectionState(const QString &state, const QString &type);
     void connectNow(const QString &path);
 
-    void requestBrowser(const QString &url);
+    void requestBrowser(const QString &url, const QString &serviceName);
     void tetheringFinished(bool);
 
 public Q_SLOTS:
     void onErrorReported(const QString &servicePath, const QString &error);
 
     void onConnectionRequest();
+    void onBrowserRequested(const QString &url, const QString &serviceName);
 
     void sendConnectReply(const QString &in0, int in1);
     void sendUserReply(const QVariantMap &input);

@@ -79,7 +79,7 @@ signals:
     void connectionRequest();
     void configurationNeeded(const QString &type);
     void connectionState(const QString &state, const QString &type);
-    void browserRequested(const QString &url);
+    void browserRequested(const QString &url, const QString &serviceName);
     void tetheringFinished(bool);
 
 private:
