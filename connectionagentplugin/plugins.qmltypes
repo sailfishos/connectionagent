@@ -37,6 +37,7 @@ Module {
         Signal {
             name: "browserRequested"
             Parameter { name: "url"; type: "string" }
+            Parameter { name: "serviceName"; type: "string" }
         }
         Signal {
             name: "tetheringFinished"
