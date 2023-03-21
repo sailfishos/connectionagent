@@ -20,6 +20,7 @@
 #include <QStringList>
 #include <QVariant>
 #include <QVector>
+#include <QLoggingCategory>
 
 class UserAgent;
 class NetworkManager;
@@ -47,7 +48,8 @@ Q_SIGNALS:
     void connectNow(const QString &path);
 
     void requestBrowser(const QString &url, const QString &serviceName);
-    void tetheringFinished(bool);
+    void wifiTetheringFinished(bool);
+    void bluetoothTetheringFinished(bool);
 
 public Q_SLOTS:
     void onErrorReported(const QString &servicePath, const QString &error);
@@ -61,7 +63,7 @@ public Q_SLOTS:
     void connectToType(const QString &type);
 
     void startTethering(const QString &type);
-    void stopTethering(bool keepPowered = false);
+    void stopTethering(const QString &type, bool keepPowered = false);
 
 private:
 
@@ -116,13 +118,20 @@ private:
     bool connmanAvailable;
 
     NetworkTechnology *tetheringWifiTech;
-    bool tetheringEnabled;
+    NetworkTechnology *tetheringBtTech;
+    // Turn on Wifi tethering when the tech is next powered up. Wifi will be turned on
+    // when this is enabled, so it won't be long. This gets reset once tethering is on
+    // so will not be restored after flight mode or power off
+    bool tetherWifiWhenPowered;
+    // Turn on Bluetooth tethering whenever the BT adaptor is powered on. This will not
+    // get reset, and is stored persistently in config, so when the option is enabled
+    // tethering will always be started when BT is powered on.
+    bool tetherBtWhenPowered;
     bool flightModeSuppression;
     uint scanTimeoutInterval;
 
     QTimer *scanTimer;
     QStringList knownTechnologies;
-    bool delayedTethering;
     bool valid;
 
 private slots:
@@ -144,7 +153,8 @@ private slots:
     void techTetheringChanged(bool b);
 
     void openConnectionDialog(const QString &type);
-    void setWifiTetheringEnabled();
+    void enableWifiTethering();
+    void enableBtTethering();
 };
 
 #endif // QCONNECTIONAGENT_H

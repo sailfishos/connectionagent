@@ -70,7 +70,7 @@ public slots:
     void sendConnectReply(const QString &replyMessage, int timeout = 120);
     void connectToType(const QString &type);
     void startTethering(const QString &type);
-    void stopTethering(bool keepPowered = false);
+    void stopTethering(const QString &type, bool keepPowered = false);
 
 signals:
     void userInputRequested(const QString &servicePath, const QVariantMap &fields);
@@ -80,7 +80,8 @@ signals:
     void configurationNeeded(const QString &type);
     void connectionState(const QString &state, const QString &type);
     void browserRequested(const QString &url, const QString &serviceName);
-    void tetheringFinished(bool);
+    void wifiTetheringFinished(bool);
+    void bluetoothTetheringFinished(bool);
 
 private:
     bool checkValidness();
