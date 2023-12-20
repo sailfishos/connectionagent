@@ -40,7 +40,11 @@ Module {
             Parameter { name: "serviceName"; type: "string" }
         }
         Signal {
-            name: "tetheringFinished"
+            name: "wifiTetheringFinished"
+            Parameter { type: "bool" }
+        }
+        Signal {
+            name: "btTetheringFinished"
             Parameter { type: "bool" }
         }
         Method {
@@ -66,6 +70,7 @@ Module {
         }
         Method {
             name: "stopTethering"
+            Parameter { name: "type"; type: "string" }
             Parameter { name: "keepPowered"; type: "bool" }
         }
         Method { name: "stopTethering" }

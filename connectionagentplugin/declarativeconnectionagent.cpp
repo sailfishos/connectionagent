@@ -80,8 +80,10 @@ void DeclarativeConnectionAgent::connectToConnectiond()
             this, &DeclarativeConnectionAgent::browserRequested);
     connect(connManagerInterface, &com::jolla::Connectiond::userInputRequested,
             this, &DeclarativeConnectionAgent::onUserInputRequested, Qt::UniqueConnection);
-    connect(connManagerInterface, &com::jolla::Connectiond::tetheringFinished,
-            this, &DeclarativeConnectionAgent::tetheringFinished);
+    connect(connManagerInterface, &com::jolla::Connectiond::bluetoothTetheringFinished,
+            this, &DeclarativeConnectionAgent::bluetoothTetheringFinished);
+    connect(connManagerInterface, &com::jolla::Connectiond::wifiTetheringFinished,
+            this, &DeclarativeConnectionAgent::wifiTetheringFinished);
 }
 
 void DeclarativeConnectionAgent::sendUserReply(const QVariantMap &input)
@@ -147,13 +149,13 @@ void DeclarativeConnectionAgent::startTethering(const QString &type)
     connManagerInterface->startTethering(type);
 }
 
-void DeclarativeConnectionAgent::stopTethering(bool keepPowered)
+void DeclarativeConnectionAgent::stopTethering(const QString &type, bool keepPowered)
 {
     if (!checkValidness()) {
         return;
     }
 
-    connManagerInterface->stopTethering(keepPowered);
+    connManagerInterface->stopTethering(type, keepPowered);
 }
 
 bool DeclarativeConnectionAgent::checkValidness()

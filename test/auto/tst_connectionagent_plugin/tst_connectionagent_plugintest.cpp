@@ -171,37 +171,58 @@ void Tst_connectionagent_pluginTest::tst_tethering()
     QVERIFY(cellServices.count() > 0);
     mobiledataService = cellServices.at(0);
 
-    bool mdOnline = mobiledataService->connected();
-    bool mdAutoconnect = mobiledataService->autoConnect();
+    { // wifi tethering test
+        bool mdOnline = mobiledataService->connected();
+        bool mdAutoconnect = mobiledataService->autoConnect();
+    
+        QSignalSpy wifiSpy(plugin, SIGNAL(wifiTetheringFinished(bool)));
+        plugin->startTethering("wifi");
+    
+        QVERIFY(wifiSpy.isValid());
+        QVERIFY(wifiSpy.wait(7000));
+    
+        QCOMPARE(wifiSpy.count(),1);
+        QList<QVariant> arguments;
+        arguments = wifiSpy.takeFirst();
+        QCOMPARE(arguments.at(0).toBool(), true);
+    
+        QTest::qWait(5000);
+    
+        QVERIFY(mobiledataService->state() == "online");
+    
+        plugin->stopTethering("wifi");
+        QTest::qWait(2500);
+    
+        QCOMPARE(wifiSpy.count(),1);
+        arguments = wifiSpy.takeFirst();
+        QCOMPARE(arguments.at(0).toBool(), false);
+    
+        QTest::qWait(5000);
+    
+        QVERIFY(wlanService->connected() == wlanOnline);
+        QVERIFY(mobiledataService->connected() == mdOnline);
+        QVERIFY(mobiledataService->autoConnect() == mdAutoconnect);
+    }
 
-    QSignalSpy spy(plugin, SIGNAL(tetheringFinished(bool)));
-    plugin->startTethering("wifi");
-
-    QVERIFY(spy.isValid());
-    QVERIFY(spy.wait(7000));
-
-    QCOMPARE(spy.count(),1);
-    QList<QVariant> arguments;
-    arguments = spy.takeFirst();
-    QCOMPARE(arguments.at(0).toBool(), true);
-
-    QTest::qWait(5000);
-
-    QVERIFY(mobiledataService->state() == "online");
-
-    plugin->stopTethering();
-    QTest::qWait(2500);
-
-    QCOMPARE(spy.count(),1);
-    arguments = spy.takeFirst();
-    QCOMPARE(arguments.at(0).toBool(), false);
-
-    QTest::qWait(5000);
-
-    QVERIFY(wlanService->connected() == wlanOnline);
-    QVERIFY(mobiledataService->connected() == mdOnline);
-    QVERIFY(mobiledataService->autoConnect() == mdAutoconnect);
-
+    { // bt tethering test
+        QSignalSpy btSpy(plugin, SIGNAL(btTetheringFinished(bool)));
+        plugin->startTethering("bluetooth");
+    
+        QVERIFY(btSpy.isValid());
+        QVERIFY(btSpy.wait(7000));
+    
+        QCOMPARE(btSpy.count(),1);
+        QList<QVariant> arguments;
+        arguments = btSpy.takeFirst();
+        QCOMPARE(arguments.at(0).toBool(), true);
+    
+        plugin->stopTethering("bluetooth");
+        QTest::qWait(2500);
+    
+        QCOMPARE(btSpy.count(),1);
+        arguments = btSpy.takeFirst();
+        QCOMPARE(arguments.at(0).toBool(), false);
+    }
 //    plugin->startTethering("wifi");
 
 
