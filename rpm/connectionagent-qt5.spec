@@ -58,14 +58,11 @@ Will enable tracing for Connectionagent
 
 %build
 %qmake5
-make %{?_smp_mflags}
-
+%make_build
 
 %install
-rm -rf %{buildroot}
 %qmake5_install
 
-%make_install
 
 mkdir -p %{buildroot}%{_userunitdir}/user-session.target.wants
 ln -s ../connectionagent.service %{buildroot}%{_userunitdir}/user-session.target.wants/
