@@ -1,7 +1,7 @@
 Name:       connectionagent-qt5
 
 Summary:    User Agent daemon
-Version:    0.11.42
+Version:    0.12.1
 Release:    0
 License:    LGPLv2
 URL:        https://git.sailfishos.org/mer-core/connectionagent
