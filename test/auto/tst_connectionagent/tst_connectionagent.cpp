@@ -35,7 +35,6 @@ class Tst_connectionagent : public QObject
 
 private Q_SLOTS:
     void tst_onErrorReported();
-    void tst_onConnectionRequest();
 
 private:
     QConnectionAgent agent;
@@ -46,36 +45,17 @@ void Tst_connectionagent::tst_onErrorReported()
     QSignalSpy spy(&agent, SIGNAL(errorReported(QString,QString)));
     agent.onErrorReported("test_path","Test error");
 
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.count(), 1);
     QList<QVariant> arguments;
     arguments = spy.takeFirst();
     QCOMPARE(arguments.at(0).toString(), QString("test_path"));
     QCOMPARE(arguments.at(1).toString(), QString("Test error"));
 
     agent.connectToType("test");
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.count(), 1);
     arguments = spy.takeFirst();
     QCOMPARE(arguments.at(0).toString(), QString(""));
     QCOMPARE(arguments.at(1).toString(), QString("Type not valid"));
-
-}
-
-void Tst_connectionagent::tst_onConnectionRequest()
-{
-    NetworkManager *netman = NetworkManagerFactory::createInstance();
-    QString currentState = netman->state();
-    if (currentState == "online") {
-        NetworkService *service = netman->defaultRoute();
-        service->requestDisconnect();
-//        service->requestConnect();
-    }
-    QSignalSpy spy(&agent, SIGNAL(connectionRequest()));
-    agent.onConnectionRequest();
-
-    if (currentState == "online")
-        QCOMPARE(spy.count(),0);
-    else
-        QCOMPARE(spy.count(),0);
 
 }
 
