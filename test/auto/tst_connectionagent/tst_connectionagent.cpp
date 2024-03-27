@@ -43,7 +43,7 @@ private:
 void Tst_connectionagent::tst_onErrorReported()
 {
     QSignalSpy spy(&agent, SIGNAL(errorReported(QString,QString)));
-    agent.onErrorReported("test_path","Test error");
+    agent.onErrorReported("test_path", "Test error");
 
     QCOMPARE(spy.count(), 1);
     QList<QVariant> arguments;
