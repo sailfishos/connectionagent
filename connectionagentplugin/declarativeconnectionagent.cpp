@@ -30,9 +30,9 @@ DeclarativeConnectionAgent::DeclarativeConnectionAgent(QObject *parent)
     : QObject(parent),
       connManagerInterface(nullptr)
 {
-    connectiondWatcher = new QDBusServiceWatcher(CONND_SERVICE,QDBusConnection::sessionBus(),
-            QDBusServiceWatcher::WatchForRegistration |
-            QDBusServiceWatcher::WatchForUnregistration, this);
+    connectiondWatcher = new QDBusServiceWatcher(CONND_SERVICE, QDBusConnection::sessionBus(),
+            QDBusServiceWatcher::WatchForRegistration
+            | QDBusServiceWatcher::WatchForUnregistration, this);
 
     connect(connectiondWatcher, &QDBusServiceWatcher::serviceRegistered,
             this, &DeclarativeConnectionAgent::connectToConnectiond);

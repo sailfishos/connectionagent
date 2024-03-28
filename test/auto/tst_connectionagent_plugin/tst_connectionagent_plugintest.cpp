@@ -50,13 +50,13 @@ private Q_SLOTS:
 
 private:
     DeclarativeConnectionAgent *plugin;
-    NetworkManager *netman;
+    QSharedPointer<NetworkManager> netman;
 };
 
 Tst_connectionagent_pluginTest::Tst_connectionagent_pluginTest()
 {
     plugin = new DeclarativeConnectionAgent(this);
-    netman = NetworkManagerFactory::createInstance();
+    netman = NetworkManager::sharedInstance();
     QTest::qWait(5000);
 }
 
@@ -74,7 +74,6 @@ void Tst_connectionagent_pluginTest::testRequestConnection_data()
 void Tst_connectionagent_pluginTest::testRequestConnection()
 {
     QFETCH(QString, tech);
-    NetworkManager *netman = NetworkManagerFactory::createInstance();
 
     QString techPath = netman->technologyPathForType(tech);
     NetworkTechnology netTech;
@@ -99,10 +98,8 @@ void Tst_connectionagent_pluginTest::testRequestConnection()
         qDebug() << reply->error();
     }
     QTest::qWait(2000);
-    QCOMPARE(spy2.count(),1);
-    plugin->sendConnectReply("Clear",0);
-
-
+    QCOMPARE(spy2.count(), 1);
+    plugin->sendConnectReply("Clear", 0);
 }
 
 void Tst_connectionagent_pluginTest::testErrorReported()
@@ -123,7 +120,6 @@ void Tst_connectionagent_pluginTest::testUserInputRequested_data()
 void Tst_connectionagent_pluginTest::testUserInputRequested()
 {
     QFETCH(QString, tech);
-    NetworkManager *netman = NetworkManagerFactory::createInstance();
 
     QString techPath = netman->technologyPathForType(tech);
     NetworkTechnology netTech;
@@ -146,11 +142,10 @@ void Tst_connectionagent_pluginTest::testUserInputRequested()
     }
 
     QTest::qWait(2000);
-    QCOMPARE(spy_userInput.count(),1);
+    QCOMPARE(spy_userInput.count(), 1);
     QVariantMap map;
     plugin->sendUserReply(map); //cancel
 }
-
 
 void Tst_connectionagent_pluginTest::tst_tethering()
 {
@@ -181,7 +176,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
         QVERIFY(wifiSpy.isValid());
         QVERIFY(wifiSpy.wait(7000));
     
-        QCOMPARE(wifiSpy.count(),1);
+        QCOMPARE(wifiSpy.count(), 1);
         QList<QVariant> arguments;
         arguments = wifiSpy.takeFirst();
         QCOMPARE(arguments.at(0).toBool(), true);
@@ -193,7 +188,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
         plugin->stopTethering("wifi");
         QTest::qWait(2500);
     
-        QCOMPARE(wifiSpy.count(),1);
+        QCOMPARE(wifiSpy.count(), 1);
         arguments = wifiSpy.takeFirst();
         QCOMPARE(arguments.at(0).toBool(), false);
     
@@ -211,7 +206,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
         QVERIFY(btSpy.isValid());
         QVERIFY(btSpy.wait(7000));
     
-        QCOMPARE(btSpy.count(),1);
+        QCOMPARE(btSpy.count(), 1);
         QList<QVariant> arguments;
         arguments = btSpy.takeFirst();
         QCOMPARE(arguments.at(0).toBool(), true);
@@ -219,7 +214,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
         plugin->stopTethering("bluetooth");
         QTest::qWait(2500);
     
-        QCOMPARE(btSpy.count(),1);
+        QCOMPARE(btSpy.count(), 1);
         arguments = btSpy.takeFirst();
         QCOMPARE(arguments.at(0).toBool(), false);
     }
@@ -232,7 +227,6 @@ void Tst_connectionagent_pluginTest::tst_tethering()
 //    arguments = spy.takeFirst();
 //    QCOMPARE(arguments.at(0).toBool(), false);
 
-//    NetworkManager *netman = NetworkManagerFactory::createInstance();
 //    NetworkService *cellServices = netman->getServices("cellular").at(0);
 //    QVERIFY(cellServices->state() == "idle");
 }
