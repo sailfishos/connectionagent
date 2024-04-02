@@ -22,8 +22,9 @@
 #include <QVector>
 #include <QLoggingCategory>
 
+#include "networkmanager.h"
+
 class UserAgent;
-class NetworkManager;
 class NetworkService;
 class NetworkTechnology;
 class QTimer;
@@ -110,7 +111,7 @@ private:
     bool shouldSuppressError(const QString &error, bool cellular) const;
 
     UserAgent *ua;
-    NetworkManager *netman;
+    QSharedPointer<NetworkManager> netman;
     QString currentNetworkState;
     ServiceList orderedServicesList;
     QStringList techPreferenceList;

@@ -17,7 +17,6 @@
 #include "connectiond_adaptor.h"
 
 #include <connman-qt5/useragent.h>
-#include <connman-qt5/networkmanager.h>
 #include <connman-qt5/networktechnology.h>
 #include <connman-qt5/networkservice.h>
 
@@ -35,7 +34,7 @@ Q_LOGGING_CATEGORY(connAgent, "org.sailfishos.connectionagent", QtWarningMsg)
 QConnectionAgent::QConnectionAgent(QObject *parent) :
     QObject(parent),
     ua(0),
-    netman(NetworkManagerFactory::createInstance()),
+    netman(NetworkManager::sharedInstance()),
     currentNetworkState(QString()),
     isEthernet(false),
     connmanAvailable(false),
@@ -62,14 +61,14 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
 
     connect(this, &QConnectionAgent::configurationNeeded, this, &QConnectionAgent::openConnectionDialog);
 
-    connect(netman, &NetworkManager::availabilityChanged, this, &QConnectionAgent::connmanAvailabilityChanged);
-    connect(netman, &NetworkManager::servicesListChanged, this, &QConnectionAgent::servicesListChanged);
-    connect(netman, &NetworkManager::stateChanged, this, &QConnectionAgent::networkStateChanged);
-    connect(netman, &NetworkManager::offlineModeChanged, this, &QConnectionAgent::offlineModeChanged);
-    connect(netman, &NetworkManager::servicesChanged, this, [=]() {
+    connect(netman.data(), &NetworkManager::availabilityChanged, this, &QConnectionAgent::connmanAvailabilityChanged);
+    connect(netman.data(), &NetworkManager::servicesListChanged, this, &QConnectionAgent::servicesListChanged);
+    connect(netman.data(), &NetworkManager::stateChanged, this, &QConnectionAgent::networkStateChanged);
+    connect(netman.data(), &NetworkManager::offlineModeChanged, this, &QConnectionAgent::offlineModeChanged);
+    connect(netman.data(), &NetworkManager::servicesChanged, this, [=]() {
         updateServices();
     });
-    connect(netman, &NetworkManager::technologiesChanged, this, &QConnectionAgent::techChanged);
+    connect(netman.data(), &NetworkManager::technologiesChanged, this, &QConnectionAgent::techChanged);
 
     QFile connmanConf("/etc/connman/main.conf");
     if (connmanConf.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -262,9 +261,6 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
 // from plugin/qml
 void QConnectionAgent::connectToType(const QString &type)
 {
-    if (!netman)
-        return;
-
     if (netman->technologyPathForType(type).isEmpty()) {
         Q_EMIT errorReported("","Type not valid");
         return;
@@ -470,8 +466,6 @@ void QConnectionAgent::technologyPowerChanged(bool powered)
 
 void QConnectionAgent::techChanged()
 {
-    if (!netman)
-        return;
     if (netman->getTechnologies().isEmpty()) {
         knownTechnologies.clear();
     }
@@ -625,7 +619,7 @@ void QConnectionAgent::openConnectionDialog(const QString &type)
 
 void QConnectionAgent::startTethering(const QString &type)
 {
-    if (!netman | (type != "wifi" && type !="bluetooth")) { // support wifi and bt
+    if (type != "wifi" && type !="bluetooth") { // support wifi and bt
         return;
     }
     qCDebug(connAgent) << "startTethering" << type;
