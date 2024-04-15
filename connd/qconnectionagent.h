@@ -151,7 +151,7 @@ private slots:
 
     void serviceAutoconnectChanged(bool);
     void scanTimeout();
-    void techTetheringChanged(bool b);
+    void techTetheringChanged(bool on);
 
     void openConnectionDialog(const QString &type);
     void enableWifiTethering();

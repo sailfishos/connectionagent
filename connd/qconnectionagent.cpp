@@ -33,13 +33,13 @@ Q_LOGGING_CATEGORY(connAgent, "org.sailfishos.connectionagent", QtWarningMsg)
 
 QConnectionAgent::QConnectionAgent(QObject *parent) :
     QObject(parent),
-    ua(0),
+    ua(nullptr),
     netman(NetworkManager::sharedInstance()),
     currentNetworkState(QString()),
     isEthernet(false),
     connmanAvailable(false),
-    tetheringWifiTech(0),
-    tetheringBtTech(0),
+    tetheringWifiTech(nullptr),
+    tetheringBtTech(nullptr),
     tetherWifiWhenPowered(false),
     tetherBtWhenPowered(false),
     flightModeSuppression(false),
@@ -75,16 +75,17 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
         while (!connmanConf.atEnd()) {
             QString line = connmanConf.readLine();
             if (line.startsWith("DefaultAutoConnectTechnologies")) {
-                QString token = line.section(" = ",1,1).simplified();
+                QString token = line.section(" = ", 1, 1).simplified();
                 techPreferenceList = token.split(",");
                 break;
             }
         }
         connmanConf.close();
     }
-    if (techPreferenceList.isEmpty())
+    if (techPreferenceList.isEmpty()) {
         //ethernet,bluetooth,cellular,wifi is default
         techPreferenceList << "bluetooth" << "wifi" << "cellular" << "ethernet";
+    }
 
     connmanAvailable = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
 
@@ -255,29 +256,29 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
     currentNetworkState = state;
     QSettings confFile;
     confFile.beginGroup("Connectionagent");
-    confFile.setValue("connected",currentNetworkState);
+    confFile.setValue("connected", currentNetworkState);
 }
 
 // from plugin/qml
 void QConnectionAgent::connectToType(const QString &type)
 {
     if (netman->technologyPathForType(type).isEmpty()) {
-        Q_EMIT errorReported("","Type not valid");
+        Q_EMIT errorReported("", "Type not valid");
         return;
     }
 
     // Connman is using "cellular" and "wifi" as part of the service path
     QString convType;
     if (type.contains("mobile")) {
-        convType="cellular";
+        convType = "cellular";
     } else if (type.contains("wlan")) {
-        convType="wifi";
+        convType = "wifi";
     } else {
-        convType=type;
+        convType = type;
     }
 
     bool found = false;
-    for (Service elem: orderedServicesList) {
+    for (Service elem : orderedServicesList) {
         if (elem.path.contains(convType)) {
             if (!isStateOnline(elem.service->state())) {
                 if (elem.service->autoConnect()) {
@@ -300,7 +301,7 @@ void QConnectionAgent::connectToType(const QString &type)
 
     // Substitute "wifi" with "wlan" for lipstick
     if (type.contains("wifi"))
-        convType="wlan";
+        convType = "wlan";
 
     Q_EMIT configurationNeeded(convType);
 }
@@ -357,9 +358,9 @@ void QConnectionAgent::networkStateChanged(const QString &state)
     QSettings confFile;
     confFile.beginGroup("Connectionagent");
     if (state != "online")
-        confFile.setValue("connected","offline");
+        confFile.setValue("connected", "offline");
     else
-        confFile.setValue("connected","online");
+        confFile.setValue("connected", "online");
 
     if ((state == "online" && netman->defaultRoute()->type() == "cellular")
             || (state == "idle")) {
@@ -471,10 +472,10 @@ void QConnectionAgent::techChanged()
     }
     if (netman->getTechnology("wifi") == nullptr) {
         tetherWifiWhenPowered = false;
-        tetheringWifiTech = 0;
+        tetheringWifiTech = nullptr;
     }
     if (netman->getTechnology("bluetooth") == nullptr) {
-        tetheringBtTech = 0;
+        tetheringBtTech = nullptr;
     }
 
     for (NetworkTechnology *technology: netman->getTechnologies()) {
@@ -529,10 +530,10 @@ void QConnectionAgent::techTetheringChanged(bool on)
     }
 }
 
-void QConnectionAgent::offlineModeChanged(bool b)
+void QConnectionAgent::offlineModeChanged(bool offline)
 {
-    flightModeSuppression = b;
-    if (b) {
+    flightModeSuppression = offline;
+    if (offline) {
         QTimer::singleShot(5 * 1000 * 60, this, &QConnectionAgent::flightModeDialogSuppressionTimeout); //5 minutes
     }
 }
