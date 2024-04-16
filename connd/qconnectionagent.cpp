@@ -31,11 +31,20 @@
 
 Q_LOGGING_CATEGORY(connAgent, "org.sailfishos.connectionagent", QtWarningMsg)
 
+static bool isStateOnline(NetworkManager::State state)
+{
+    return state == NetworkManager::OnlineState || state == NetworkManager::ReadyState;
+}
+
+static bool isStateOnline(NetworkService::ServiceState state)
+{
+    return state == NetworkService::OnlineState || state == NetworkService::ReadyState;
+}
+
 QConnectionAgent::QConnectionAgent(QObject *parent) :
     QObject(parent),
     ua(nullptr),
     netman(NetworkManager::sharedInstance()),
-    currentNetworkState(QString()),
     isEthernet(false),
     connmanAvailable(false),
     tetheringWifiTech(nullptr),
@@ -63,7 +72,7 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
 
     connect(netman.data(), &NetworkManager::availabilityChanged, this, &QConnectionAgent::connmanAvailabilityChanged);
     connect(netman.data(), &NetworkManager::servicesListChanged, this, &QConnectionAgent::servicesListChanged);
-    connect(netman.data(), &NetworkManager::stateChanged, this, &QConnectionAgent::networkStateChanged);
+    connect(netman.data(), &NetworkManager::globalStateChanged, this, &QConnectionAgent::networkManagerStateChanged);
     connect(netman.data(), &NetworkManager::offlineModeChanged, this, &QConnectionAgent::offlineModeChanged);
     connect(netman.data(), &NetworkManager::servicesChanged, this, &QConnectionAgent::updateServices);
     connect(netman.data(), &NetworkManager::technologiesChanged, this, &QConnectionAgent::techChanged);
@@ -195,22 +204,22 @@ void QConnectionAgent::serviceErrorChanged(const QString &error)
     Q_EMIT errorReported(service->path(), error);
 }
 
-void QConnectionAgent::serviceStateChanged(const QString &state)
+void QConnectionAgent::serviceStateChanged(NetworkService::ServiceState state)
 {
     NetworkService *service = static_cast<NetworkService *>(sender());
     if (!service)
         return;
-    qCDebug(connAgent) << state << service->name() << service->strength();
-    qCDebug(connAgent) << "currentNetworkState" << currentNetworkState;
 
-    if (state == "ready" && service->type() == "wifi"
+    qCDebug(connAgent) << state << service->name() << service->strength();
+
+    if (state == NetworkService::ReadyState && service->type() == "wifi"
             && !tetherWifiWhenPowered
             && netman->defaultRoute()->type() == "cellular") {
         netman->defaultRoute()->requestDisconnect();
     }
 
-    if (state == "disconnect") {
-        Q_EMIT connectionState(state, service->type());
+    if (state == NetworkService::DisconnectState) {
+        Q_EMIT connectionState(QStringLiteral("disconnect"), service->type());
     }
 
     if (!service->favorite() || !netman->getTechnology(service->type())
@@ -218,21 +227,21 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
         qCDebug(connAgent) << "not fav or not powered";
         return;
     }
-    if (state == "disconnect") {
+    if (state == NetworkService::DisconnectState) {
         ua->sendConnectReply("Clear");
     }
-    if (state == "failure") {
+    if (state == NetworkService::FailureState) {
         if (tetherWifiWhenPowered && service->type() == "cellular" && tetheringWifiTech->tethering()) {
             Q_EMIT wifiTetheringFinished(false);
         }
     }
 
-    if (tetherWifiWhenPowered && service->type() == "wifi" && state == "association") {
+    if (tetherWifiWhenPowered && service->type() == "wifi" && state == NetworkService::AssociationState) {
         service->requestDisconnect();
     }
 
-    if (state == "online") {
-        Q_EMIT connectionState(state, service->type());
+    if (state == NetworkService::OnlineState) {
+        Q_EMIT connectionState(QStringLiteral("online"), service->type());
 
         if (service->type() == "wifi" && tetherWifiWhenPowered) {
             netman->getTechnology(service->type())->setTethering(true);
@@ -243,18 +252,14 @@ void QConnectionAgent::serviceStateChanged(const QString &state)
             }
         }
     }
-    //auto migrate
-    if (state == "idle") {
+    // auto migrate
+    if (state == NetworkService::IdleState) {
         if (service->type() == "wifi" && tetherWifiWhenPowered) {
             netman->getTechnology(service->type())->setTethering(true);
         }
     } else {
         updateServices();
     }
-    currentNetworkState = state;
-    QSettings confFile;
-    confFile.beginGroup("Connectionagent");
-    confFile.setValue("connected", currentNetworkState);
 }
 
 // from plugin/qml
@@ -278,7 +283,7 @@ void QConnectionAgent::connectToType(const QString &type)
     bool found = false;
     for (Service elem : orderedServicesList) {
         if (elem.path.contains(convType)) {
-            if (!isStateOnline(elem.service->state())) {
+            if (!isStateOnline(elem.service->serviceState())) {
                 if (elem.service->autoConnect()) {
                     qCDebug(connAgent) << "<<<<<<<<<<< requestConnect() >>>>>>>>>>>>";
                     elem.service->requestConnect();
@@ -327,7 +332,7 @@ void QConnectionAgent::updateServices()
                 //new!
                 qCInfo(connAgent) << "New service:" << servicePath;
 
-                QObject::connect(serv, &NetworkService::stateChanged,
+                QObject::connect(serv, &NetworkService::serviceStateChanged,
                                  this, &QConnectionAgent::serviceStateChanged, Qt::UniqueConnection);
                 QObject::connect(serv, &NetworkService::connectRequestFailed,
                                  this, &QConnectionAgent::serviceErrorChanged, Qt::UniqueConnection);
@@ -349,19 +354,12 @@ void QConnectionAgent::servicesError(const QString &errorMessage)
     onErrorReported(serv->path(), errorMessage);
 }
 
-void QConnectionAgent::networkStateChanged(const QString &state)
+void QConnectionAgent::networkManagerStateChanged(NetworkManager::State state)
 {
     qCInfo(connAgent) << "Network state:" << state;
 
-    QSettings confFile;
-    confFile.beginGroup("Connectionagent");
-    if (state != "online")
-        confFile.setValue("connected", "offline");
-    else
-        confFile.setValue("connected", "online");
-
-    if ((state == "online" && netman->defaultRoute()->type() == "cellular")
-            || (state == "idle")) {
+    if ((state == NetworkManager::OnlineState && netman->defaultRoute()->type() == "cellular")
+            || (state == NetworkManager::IdleState)) {
 
         if (tetheringWifiTech && tetheringWifiTech->powered()
                 && !tetheringWifiTech->tethering())
@@ -371,7 +369,7 @@ void QConnectionAgent::networkStateChanged(const QString &state)
             scanTimer->start(scanTimeoutInterval * 60 * 1000);
     }
 
-    if (tetherWifiWhenPowered && state == "online") {
+    if (tetherWifiWhenPowered && state == NetworkManager::OnlineState) {
 
         if (tetheringWifiTech->tethering()) {
             if (netman->defaultRoute()->type() == "cellular") {
@@ -384,14 +382,12 @@ void QConnectionAgent::networkStateChanged(const QString &state)
     }
 }
 
-void QConnectionAgent::connmanAvailabilityChanged(bool b)
+void QConnectionAgent::connmanAvailabilityChanged(bool available)
 {
-    connmanAvailable = b;
-    if (b) {
+    connmanAvailable = available;
+
+    if (available) {
         setup();
-        currentNetworkState = netman->state();
-    } else {
-        currentNetworkState = "error";
     }
 }
 
@@ -400,7 +396,7 @@ void QConnectionAgent::setup()
     qCDebug(connAgent) << Q_FUNC_INFO << connmanAvailable;
 
     if (connmanAvailable) {
-        qCDebug(connAgent) << Q_FUNC_INFO << netman->state();
+        qCDebug(connAgent) << Q_FUNC_INFO << netman->globalState();
         delete ua;
         ua = new UserAgent(this);
 
@@ -417,7 +413,7 @@ void QConnectionAgent::setup()
         confFile.beginGroup("Connectionagent");
         scanTimeoutInterval = confFile.value("scanTimerInterval", "1").toUInt(); //in minutes
 
-        if (isStateOnline(netman->state())) {
+        if (isStateOnline(netman->globalState())) {
             qCInfo(connAgent) << "Default route type:" << netman->defaultRoute()->type();
             if (netman->defaultRoute()->type() == "ethernet")
                 isEthernet = true;
@@ -496,13 +492,6 @@ void QConnectionAgent::techChanged()
     }
 }
 
-bool QConnectionAgent::isStateOnline(const QString &state)
-{
-    if (state == "online" || state == "ready")
-        return true;
-    return false;
-}
-
 void QConnectionAgent::techTetheringChanged(bool on)
 {
     qCDebug(connAgent) << on;
@@ -514,8 +503,10 @@ void QConnectionAgent::techTetheringChanged(bool on)
         if (services.isEmpty())
             return;
         NetworkService* cellService = services.at(0);
+
         if (cellService) {
-            if (cellService->state() == "idle"|| cellService->state() == "failure") {
+            if (cellService->serviceState() == NetworkService::IdleState
+                    || cellService->serviceState() == NetworkService::FailureState) {
                 qCInfo(connAgent) << "Requesting cell connect";
                 cellService->requestConnect();
             } else if (cellService->connected()) {
@@ -549,7 +540,7 @@ void QConnectionAgent::serviceAutoconnectChanged(bool on)
     qCDebug(connAgent) << service->path() << "AutoConnect is" << on;
 
     if (!on) {
-        if (service->state() != "idle")
+        if (service->serviceState() != NetworkService::IdleState)
             service->requestDisconnect();
     }
 }
@@ -696,9 +687,9 @@ void QConnectionAgent::stopTethering(const QString &type, bool keepPowered)
         bool b = confFile.value("tetheringCellularConnected").toBool();
         bool ab = confFile.value("tetheringCellularAutoconnect").toBool();
     
-        for (Service elem: orderedServicesList) {
+        for (Service elem : orderedServicesList) {
             if (elem.path.contains("cellular")) {
-                if (isStateOnline(elem.service->state())) {
+                if (isStateOnline(elem.service->serviceState())) {
                     qCDebug(connAgent) << "disconnect mobile data";
                     if (!b)
                         elem.service->requestDisconnect();

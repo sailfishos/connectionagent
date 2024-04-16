@@ -23,6 +23,7 @@
 #include <QLoggingCategory>
 
 #include "networkmanager.h"
+#include "networkservice.h"
 
 class UserAgent;
 class NetworkService;
@@ -105,14 +106,12 @@ private:
 
     void setup();
     void updateServices();
-    bool isStateOnline(const QString &state);
     void removeAllTypes(const QString &type);
 
     bool shouldSuppressError(const QString &error, bool cellular) const;
 
     UserAgent *ua;
     QSharedPointer<NetworkManager> netman;
-    QString currentNetworkState;
     ServiceList orderedServicesList;
     QStringList techPreferenceList;
     bool isEthernet;
@@ -137,10 +136,10 @@ private:
 
 private slots:
     void serviceErrorChanged(const QString &error);
-    void serviceStateChanged(const QString &state);
-    void networkStateChanged(const QString &state);
+    void serviceStateChanged(NetworkService::ServiceState state);
+    void networkManagerStateChanged(NetworkManager::State state);
 
-    void connmanAvailabilityChanged(bool b);
+    void connmanAvailabilityChanged(bool available);
     void servicesError(const QString &);
     void technologyPowerChanged(bool);
     void techChanged();
