@@ -65,9 +65,7 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     connect(netman.data(), &NetworkManager::servicesListChanged, this, &QConnectionAgent::servicesListChanged);
     connect(netman.data(), &NetworkManager::stateChanged, this, &QConnectionAgent::networkStateChanged);
     connect(netman.data(), &NetworkManager::offlineModeChanged, this, &QConnectionAgent::offlineModeChanged);
-    connect(netman.data(), &NetworkManager::servicesChanged, this, [=]() {
-        updateServices();
-    });
+    connect(netman.data(), &NetworkManager::servicesChanged, this, &QConnectionAgent::updateServices);
     connect(netman.data(), &NetworkManager::technologiesChanged, this, &QConnectionAgent::techChanged);
 
     QFile connmanConf("/etc/connman/main.conf");
