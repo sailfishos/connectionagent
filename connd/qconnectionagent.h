@@ -115,7 +115,6 @@ private:
     ServiceList orderedServicesList;
     QStringList techPreferenceList;
     bool isEthernet;
-    bool connmanAvailable;
 
     NetworkTechnology *tetheringWifiTech;
     NetworkTechnology *tetheringBtTech;

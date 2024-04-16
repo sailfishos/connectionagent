@@ -46,7 +46,6 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
     ua(nullptr),
     netman(NetworkManager::sharedInstance()),
     isEthernet(false),
-    connmanAvailable(false),
     tetheringWifiTech(nullptr),
     tetheringBtTech(nullptr),
     tetherWifiWhenPowered(false),
@@ -94,7 +93,7 @@ QConnectionAgent::QConnectionAgent(QObject *parent) :
         techPreferenceList << "bluetooth" << "wifi" << "cellular" << "ethernet";
     }
 
-    connmanAvailable = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
+    bool connmanAvailable = QDBusConnection::systemBus().interface()->isServiceRegistered("net.connman");
 
     scanTimer = new QTimer(this);
     connect(scanTimer, &QTimer::timeout, this, &QConnectionAgent::scanTimeout);
@@ -384,8 +383,6 @@ void QConnectionAgent::networkManagerStateChanged(NetworkManager::State state)
 
 void QConnectionAgent::connmanAvailabilityChanged(bool available)
 {
-    connmanAvailable = available;
-
     if (available) {
         setup();
     }
@@ -393,49 +390,47 @@ void QConnectionAgent::connmanAvailabilityChanged(bool available)
 
 void QConnectionAgent::setup()
 {
-    qCDebug(connAgent) << Q_FUNC_INFO << connmanAvailable;
+    qCDebug(connAgent) << Q_FUNC_INFO << netman->globalState();
+    delete ua;
+    ua = new UserAgent(this);
 
-    if (connmanAvailable) {
-        qCDebug(connAgent) << Q_FUNC_INFO << netman->globalState();
-        delete ua;
-        ua = new UserAgent(this);
+    connect(ua, &UserAgent::connectionRequest, this, &QConnectionAgent::onConnectionRequest);
+    connect(ua, &UserAgent::errorReported, this, &QConnectionAgent::onErrorReported);
+    connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::userInputCanceled);
+    connect(ua, &UserAgent::userInputRequested, this, &QConnectionAgent::userInputRequested);
+    connect(ua, &UserAgent::browserRequested, this, &QConnectionAgent::onBrowserRequested);
 
-        connect(ua, &UserAgent::connectionRequest, this, &QConnectionAgent::onConnectionRequest);
-        connect(ua, &UserAgent::errorReported, this, &QConnectionAgent::onErrorReported);
-        connect(ua, &UserAgent::userInputCanceled, this, &QConnectionAgent::userInputCanceled);
-        connect(ua, &UserAgent::userInputRequested, this, &QConnectionAgent::userInputRequested);
-        connect(ua, &UserAgent::browserRequested, this, &QConnectionAgent::onBrowserRequested);
+    updateServices();
+    offlineModeChanged(netman->offlineMode());
 
-        updateServices();
-        offlineModeChanged(netman->offlineMode());
+    QSettings confFile;
+    confFile.beginGroup("Connectionagent");
+    scanTimeoutInterval = confFile.value("scanTimerInterval", "1").toUInt(); //in minutes
 
-        QSettings confFile;
-        confFile.beginGroup("Connectionagent");
-        scanTimeoutInterval = confFile.value("scanTimerInterval", "1").toUInt(); //in minutes
+    if (isStateOnline(netman->globalState())) {
+        qCInfo(connAgent) << "Default route type:" << netman->defaultRoute()->type();
+        if (netman->defaultRoute()->type() == "ethernet")
+            isEthernet = true;
+        if (netman->defaultRoute()->type() == "cellular" && scanTimeoutInterval != 0)
+            scanTimer->start(scanTimeoutInterval * 60 * 1000);
 
-        if (isStateOnline(netman->globalState())) {
-            qCInfo(connAgent) << "Default route type:" << netman->defaultRoute()->type();
-            if (netman->defaultRoute()->type() == "ethernet")
-                isEthernet = true;
-            if (netman->defaultRoute()->type() == "cellular" && scanTimeoutInterval != 0)
-                scanTimer->start(scanTimeoutInterval * 60 * 1000);
+    }
 
-        }
-        tetherBtWhenPowered = confFile.value("tetheringBtEnabled", false).toBool();
-        if (tetherBtWhenPowered) {
-            tetheringBtTech = netman->getTechnology("bluetooth");
-            if (tetheringBtTech) {
-                connect(tetheringBtTech, &NetworkTechnology::poweredChanged,
-                        this, &QConnectionAgent::technologyPowerChanged);
-                connect(tetheringBtTech, &NetworkTechnology::tetheringChanged,
-                        this, &QConnectionAgent::techTetheringChanged, Qt::UniqueConnection);
-                if (tetheringBtTech->powered()) {
-                    tetheringBtTech->setTethering(true);
-                }
+    tetherBtWhenPowered = confFile.value("tetheringBtEnabled", false).toBool();
+
+    if (tetherBtWhenPowered) {
+        tetheringBtTech = netman->getTechnology("bluetooth");
+        if (tetheringBtTech) {
+            connect(tetheringBtTech, &NetworkTechnology::poweredChanged,
+                    this, &QConnectionAgent::technologyPowerChanged);
+            connect(tetheringBtTech, &NetworkTechnology::tetheringChanged,
+                    this, &QConnectionAgent::techTetheringChanged, Qt::UniqueConnection);
+            if (tetheringBtTech->powered()) {
+                tetheringBtTech->setTethering(true);
             }
         }
-        qCDebug(connAgent) << "Config file says" << confFile.value("connected", "online").toString();
     }
+    qCDebug(connAgent) << "Config file says" << confFile.value("connected", "online").toString();
 }
 
 void QConnectionAgent::technologyPowerChanged(bool powered)
