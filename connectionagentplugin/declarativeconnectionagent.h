@@ -17,8 +17,9 @@
 #ifndef DECLARATIVECONNECTIONAGENT_H
 #define DECLARATIVECONNECTIONAGENT_H
 
-#include "declarativeconnectionagent.h"
 #include "connectiond_interface.h"
+
+#include <QObject>
 
 /*
  *This class is for accessing connman's UserAgent from multiple sources.
