@@ -17,12 +17,6 @@
 #include "declarativeconnectionagent.h"
 #include "connectiond_interface.h"
 
-#include <connman-qt5/networkmanager.h>
-#include <connman-qt5/networktechnology.h>
-#include <connman-qt5/networkservice.h>
-
-#include <qobject.h>
-
 #define CONND_SERVICE "com.jolla.Connectiond"
 #define CONND_PATH "/Connectiond"
 

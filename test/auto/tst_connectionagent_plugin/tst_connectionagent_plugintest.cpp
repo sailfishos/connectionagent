@@ -83,8 +83,8 @@ void Tst_connectionagent_pluginTest::testRequestConnection()
     for (int i = 0; i < wifiServices.count(); i++) {
         if (wifiServices[i]->autoConnect())
             wifiServices[i]->setAutoConnect(false);
-        if (wifiServices[i]->state() == "online"
-                || wifiServices[i]->state() == "ready") {
+        if (wifiServices[i]->serviceState() == NetworkService::OnlineState
+                || wifiServices[i]->serviceState() == NetworkService::ReadyState) {
             wifiServices[i]->requestDisconnect();
             //autoconnect disables the requestConnect signal
         }
@@ -135,7 +135,7 @@ void Tst_connectionagent_pluginTest::testUserInputRequested()
         }
         if (wifiServices[i]->autoConnect())
             wifiServices[i]->setAutoConnect(false);
-        if (wifiServices[i]->state() == "idle") {
+        if (wifiServices[i]->serviceState() == NetworkService::IdleState) {
             wifiServices[i]->requestConnect();
             break;
         }
@@ -183,7 +183,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
     
         QTest::qWait(5000);
     
-        QVERIFY(mobiledataService->state() == "online");
+        QVERIFY(mobiledataService->serviceState() == NetworkService::OnlineState);
     
         plugin->stopTethering("wifi");
         QTest::qWait(2500);
@@ -228,7 +228,7 @@ void Tst_connectionagent_pluginTest::tst_tethering()
 //    QCOMPARE(arguments.at(0).toBool(), false);
 
 //    NetworkService *cellServices = netman->getServices("cellular").at(0);
-//    QVERIFY(cellServices->state() == "idle");
+//    QVERIFY(cellServices->serviceState() == NetworkService::IdleState);
 }
 
 QTEST_MAIN(Tst_connectionagent_pluginTest)
