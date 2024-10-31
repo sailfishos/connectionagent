@@ -1,10 +1,10 @@
 Name:       connectionagent-qt5
 
 Summary:    User Agent daemon
-Version:    0.12.1
+Version:    0.12.4
 Release:    0
 License:    LGPLv2
-URL:        https://git.sailfishos.org/mer-core/connectionagent
+URL:        https://github.com/sailfishos/connectionagent/
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   connman-qt5-declarative
 Requires:   systemd
@@ -19,8 +19,6 @@ BuildRequires:  pkgconfig(Qt5Test)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(qt5-boostable)
 BuildRequires:  pkgconfig(systemd)
-Provides:   connectionagent > 0.10.1
-Obsoletes:   connectionagent <= 0.7.6
 
 # Because of systemctl-user
 Requires(post):   systemd
@@ -83,7 +81,6 @@ systemctl-user daemon-reload || :
 fi
 
 %files
-%defattr(-,root,root,-)
 %{_bindir}/connectionagent
 %{_datadir}/dbus-1/services/com.jolla.Connectiond.service
 %{_datadir}/mapplauncherd/privileges.d/connectionagent
@@ -93,13 +90,10 @@ fi
 %license COPYING
 
 %files declarative
-%defattr(-,root,root,-)
 %{_libdir}/qt5/qml/com/jolla/connection/*
 
 %files test
-%defattr(-,root,root,-)
 %{_prefix}/opt/tests/connectionagent/*
 
 %files tracing
-%defattr(-,root,root,-)
 %config /var/lib/environment/nemo/70-connectionagent-tracing.conf
