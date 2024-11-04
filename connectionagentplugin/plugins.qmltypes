@@ -44,7 +44,7 @@ Module {
             Parameter { type: "bool" }
         }
         Signal {
-            name: "btTetheringFinished"
+            name: "bluetoothTetheringFinished"
             Parameter { type: "bool" }
         }
         Method {
@@ -73,6 +73,9 @@ Module {
             Parameter { name: "type"; type: "string" }
             Parameter { name: "keepPowered"; type: "bool" }
         }
-        Method { name: "stopTethering" }
+        Method {
+            name: "stopTethering"
+            Parameter { name: "type"; type: "string" }
+        }
     }
 }
