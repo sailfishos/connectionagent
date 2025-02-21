@@ -6,7 +6,6 @@ Release:    0
 License:    LGPLv2
 URL:        https://github.com/sailfishos/connectionagent/
 Source0:    %{name}-%{version}.tar.bz2
-Requires:   connman-qt5-declarative
 Requires:   systemd
 Requires:   systemd-user-session-targets
 Requires:   connman >= 1.21
